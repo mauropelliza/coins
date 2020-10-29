@@ -1,0 +1,12 @@
+spring:
+  profiles: local
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/coinsdb?zeroDateTimeBehavior=convertToNull
+    username: root
+    password: rootaccess
+    driverClassName: com.mysql.jdbc.Driver
