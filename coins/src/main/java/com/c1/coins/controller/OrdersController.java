@@ -6,16 +6,18 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.c1.coins.model.BuyReportProductOrderLine;
 import com.c1.coins.model.Order;
 import com.c1.coins.service.OrdersService;
 
 @RestController
-@RequestMapping(path="ordersReport")
-public class OrdersReportController {
+@RequestMapping(path="orders")
+public class OrdersController {
 
 	@Autowired
 	private OrdersService ordersService;
@@ -27,4 +29,18 @@ public class OrdersReportController {
 			@RequestParam(required = false) Integer orderStatus) {
 		return ordersService.createYearReport(startDate, endDate, orderStatus);
 	}
+	
+	@GetMapping(path = "/{orderId}")
+	public Order getOrderById(@PathVariable Integer orderId) {
+		return ordersService.getOrderById(orderId);
+	}
+	
+	@GetMapping( path = "/buyReport")
+	public List<BuyReportProductOrderLine> createBuyReport(
+			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate, 
+			@RequestParam(required = false)  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate, 
+			@RequestParam(required = false) Integer orderStatus) {
+		return ordersService.createBuyReport(startDate, endDate, orderStatus);
+	}
+	
 }

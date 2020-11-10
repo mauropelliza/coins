@@ -42,18 +42,7 @@ public class Order {
 
 	public void setLines(List<LineOrder> lines) {
 		this.lines = lines;
-		lines.stream().forEach(l -> l.setParentOrder(getCloneWithoutLines()));
-	}
-
-	// frenamos la recursividad
-	private Order getCloneWithoutLines() {
-		Order clone = new Order();
-		clone.setId(this.id);
-		clone.setDate(this.date);
-		clone.setStatus(this.status);
-		clone.setUser(this.user);
-		
-		return clone;
+		lines.stream().forEach(l -> l.setParentOrder(this));
 	}
 
 	public void addMeta(String key, String value) {

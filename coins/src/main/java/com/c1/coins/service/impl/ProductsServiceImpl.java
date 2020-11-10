@@ -9,16 +9,24 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.c1.coins.model.Product;
+import com.c1.coins.model.ProductFull;
 import com.c1.coins.repository.DBRepository;
 import com.c1.coins.service.ProductsService;
 import com.c1.coins.service.WooCommerceService;
+import com.c1.coins.utils.VisibilityEnum;
+import com.c1.coins.validators.ProductValidator;
 import com.icoderman.woocommerce.EndpointBaseType;
 import com.icoderman.woocommerce.WooCommerce;
 
 @Service
 public class ProductsServiceImpl implements ProductsService {
+	
+	private final static String INSTOCK = "instock";
+	private final static String OUTOFSTOCK = "outofstock";
+	
 	@Autowired
 	private WooCommerceService wooCommerceService;
 	
@@ -27,6 +35,9 @@ public class ProductsServiceImpl implements ProductsService {
 	
 	@Value("${spring.api.server}")
 	private String woocommerceServer;
+	
+	@Autowired
+	private ProductValidator productValidator;
 	
 	@Override
 	public List<Object> getAllProductsFromWooc() {
@@ -52,5 +63,39 @@ public class ProductsServiceImpl implements ProductsService {
 			return new ArrayList<Product>();
 		
 		return productMap.values().stream().collect(Collectors.toList());		
+	}
+
+	@Override
+	public void setVisibility(Integer productId, String visibility) {
+		productValidator.validateVisibility(visibility);
+		productValidator.validateProductExistance(productId);
+		if(VisibilityEnum.VISIBLE.getValue().equalsIgnoreCase(visibility)) {
+			showProduct(productId);
+		} else {
+			hideProduct(productId);
+		}
+	}
+
+	@Transactional
+	private void hideProduct(Integer productId) {
+		dBRepository.setStock(OUTOFSTOCK, productId);
+		dBRepository.updateProductDates(productId);
+		dBRepository.updateTermMetaCounters(productId, VisibilityEnum.HIDDEN.getValue());
+		dBRepository.toggleSearcheability(productId, VisibilityEnum.HIDDEN.getValue());
+		
+	}
+	
+	@Transactional
+	private void showProduct(Integer productId) {
+		dBRepository.setStock(INSTOCK, productId);
+		dBRepository.updateProductDates(productId);
+		dBRepository.updateTermMetaCounters(productId, VisibilityEnum.VISIBLE.getValue());
+		dBRepository.toggleSearcheability(productId, VisibilityEnum.VISIBLE.getValue());
+	}
+
+	@Override
+	public List<ProductFull> getProductsFromWoo() {
+		dBRepository.getProductsFromWoo();
+		return null;
 	}
 }

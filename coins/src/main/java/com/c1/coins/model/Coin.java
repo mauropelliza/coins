@@ -1,18 +1,18 @@
 package com.c1.coins.model;
-
+/*
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
-
+*/
 //@Entity
 //@Table(name = "coins")
 public class Coin {
 	
-	@Id
+	//@Id
 	private Integer id;
 	
-	@Column
+	//@Column
 	private String name;
 	
 	public Coin() {

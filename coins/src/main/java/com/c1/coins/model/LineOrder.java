@@ -10,6 +10,7 @@ import com.google.common.collect.Maps;
 public class LineOrder {
 
 	private String product;
+	private Integer productIdNumber;
 	private Map<String, String> meta = Maps.newHashMap();
 	private Order parentOrder;
 	private Double productCoinsInCatalog;
@@ -73,6 +74,14 @@ public class LineOrder {
 	public String toString() {
 		return this.getProductId() + ": " + this.product + " x " + this.getQuantity() + ". SubTotal: "
 				+ getLineSubtotal() + " Total:" + getLineTotal();
+	}
+
+	public Integer getProductIdNumber() {
+		return productIdNumber;
+	}
+
+	public void setProductIdNumber(Integer productIdNumber) {
+		this.productIdNumber = productIdNumber;
 	}
 
 }
