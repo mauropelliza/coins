@@ -38,4 +38,9 @@ public class ProductsController {
 	public List<ProductFull> getProductsFromWoo(){
 		return productsService.getProductsFromWoo();
 	}
+	
+	@GetMapping(path="/report.csv")
+	public String getProductsCsvFromWoo(){
+		return productsService.getProductsCsvFromWoo();
+	}
 }

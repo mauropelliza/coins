@@ -13,4 +13,6 @@ public interface ProductsService {
 	public void setVisibility(Integer productId, String visibility);
 	
 	public List<ProductFull> getProductsFromWoo();
+
+	public String getProductsCsvFromWoo();
 }

@@ -319,6 +319,7 @@ public class DBRepository {
 				"then 'SI' else 'NO' END AS VISIBLE, csv.coins CSVCOINS,  CONCAT(csv.price,csv.currency,csv.currency_type) USD " +
 	    "FROM wp_posts p LEFT JOIN wp_postmeta pm ON p.id = pm.post_id " +
 	    "LEFT JOIN wp_postmeta pm2 ON p.id = pm2.post_id " +
+	    "LEFT JOIN product_prices2 csv on p.id = csv.product_id " +
 	    "WHERE p.post_type = 'product' and pm.meta_key = '_stock_status' and pm2.meta_key = '_price'";
 		
 		List<ProductFull> productos = jdbc.query(query, new RowMapper<ProductFull>() {
