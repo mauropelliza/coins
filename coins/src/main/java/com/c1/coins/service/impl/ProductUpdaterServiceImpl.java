@@ -21,14 +21,14 @@ public class ProductUpdaterServiceImpl implements ProductUpdaterService {
 	
 	@Transactional
 	public String updateWooCommerceDB(CsvProduct update) {
-			if (update.getVisible()) {
-				showProduct(update.getId());
-			} else {
-				hideProduct(update.getId());
-			}
-			dBRepository.setProductName(update.getTitle(), update.getId());
-			dBRepository.setProductDbCoins(update.getDbCoins(), update.getId());
-			dBRepository.updateProductPrices(update);
+		if (update.getVisible()) {
+			showProduct(update.getId());
+		} else {
+			hideProduct(update.getId());
+		}
+		dBRepository.setProductName(update.getTitle(), update.getId());
+		dBRepository.setProductDbCoins(update.getDbCoins(), update.getId());
+		dBRepository.updateProductPrices(update);
 
 		return StringUtils.EMPTY;
 	}
@@ -48,7 +48,7 @@ public class ProductUpdaterServiceImpl implements ProductUpdaterService {
 		dBRepository.deletePost(postId);
 	}
 	
-	private String rollbackInsert(int level, Integer newId) {
+	/* private String rollbackInsert(int level, Integer newId) {
 		System.out.println("EJECUTANDO EL ROLLBACK !!!");
 		try {
 			if(level == 1) {
@@ -66,7 +66,7 @@ public class ProductUpdaterServiceImpl implements ProductUpdaterService {
 		} catch (Exception e) {
 			return "hubo un problema al revertir los cambios, la informacion quedo incosistente";
 		}
-	}
+	} */
 	
 	@Override
 	public void hideProduct(Integer productId) {

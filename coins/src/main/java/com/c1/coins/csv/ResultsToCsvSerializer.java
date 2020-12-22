@@ -6,8 +6,6 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import com.google.common.collect.Lists;
-
 @Component
 public class ResultsToCsvSerializer {
 	@Value("${csv-separator}") 
