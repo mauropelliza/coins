@@ -8,11 +8,13 @@ public class ProductToCsvSerializer {
 		CSVLine cells = new CSVLine();
 		cells.add("id del producto");
 		cells.add("nombre");
-		cells.add("stock");
 		cells.add("coins (woo db)");
 		cells.add("coins (excel)");
 		cells.add("USD (excel)");
+		cells.add("currency (excel)");
+		cells.add("currency type (excel)");
 		cells.add("visible");
+		cells.add("acción");
 
 		return cells.toString();
 
@@ -22,10 +24,11 @@ public class ProductToCsvSerializer {
 		CSVLine cells = new CSVLine();
 		cells.add(product.getId());
 		cells.add(product.getTitle());
-		cells.add(product.getStock());
 		cells.add(product.getDbCoins());
 		cells.add(product.getCsvCoins());
 		cells.add(product.getCsvUsd());
+		cells.add(product.getCsvCurrency());
+		cells.add(product.getCsvCurrencyType());
 		cells.add(product.getVisible());
 
 		return cells.toString();

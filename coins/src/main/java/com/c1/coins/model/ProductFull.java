@@ -3,11 +3,12 @@ package com.c1.coins.model;
 public class ProductFull {
 	private Integer id;
 	private String title;
-	private String stock;
 	private String dbCoins;
 	private String csvCoins;
 	private String csvUsd;
-	private String visible;
+	private String csvCurrency;
+	private String csvCurrencyType;
+	private boolean visible;
 	
 	public ProductFull() {
 
@@ -24,12 +25,6 @@ public class ProductFull {
 	}
 	public void setTitle(String title) {
 		this.title = title;
-	}
-	public String getStock() {
-		return stock;
-	}
-	public void setStock(String stock) {
-		this.stock = stock;
 	}
 	public String getDbCoins() {
 		return dbCoins;
@@ -49,10 +44,22 @@ public class ProductFull {
 	public void setCsvUsd(String csvUsd) {
 		this.csvUsd = csvUsd;
 	}
-	public String getVisible() {
+	public String getCsvCurrency() {
+		return csvCurrency;
+	}
+	public void setCsvCurrency(String csvCurrency) {
+		this.csvCurrency = csvCurrency;
+	}
+	public String getCsvCurrencyType() {
+		return csvCurrencyType;
+	}
+	public void setCsvCurrencyType(String csvCurrencyType) {
+		this.csvCurrencyType = csvCurrencyType;
+	}
+	public boolean getVisible() {
 		return visible;
 	}
-	public void setVisible(String visible) {
+	public void setVisible(boolean visible) {
 		this.visible = visible;
 	}
 }

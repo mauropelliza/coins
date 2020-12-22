@@ -1,8 +1,13 @@
 package com.c1.coins.utils;
 
+import java.io.Reader;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+
+import com.opencsv.CSVParserBuilder;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
 
 public class Utils {
 
@@ -71,6 +76,13 @@ public class Utils {
 	public static String getNowLocalDateTimeString() {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 		return LocalDateTime.now().format(formatter);
+	}
+	
+	public static CSVReader getCsvReaderUsingSeparator(Reader reader, String separator) {
+		CSVReaderBuilder builder = new CSVReaderBuilder(reader).withCSVParser(new CSVParserBuilder()
+			    .withSeparator(';').withIgnoreLeadingWhiteSpace(true).build());
+		return builder.withSkipLines(1).build();
+		
 	}
 
 }
