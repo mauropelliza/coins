@@ -1,8 +1,11 @@
 package com.c1.coins.repository;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -33,6 +36,8 @@ import com.c1.coins.utils.Utils;
 import com.c1.coins.utils.VisibilityEnum;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvValidationException;
 
 @Repository
 public class DBRepository {
@@ -46,14 +51,15 @@ public class DBRepository {
 	private Map<Integer, User> users = Maps.newHashMap();
 	private Map<String, Product> productsMap;
 
-	public DBRepository() {
-		try {
-			productsMap = loadProducts(new File("./products.csv"));
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
+//	public DBRepository() {
+//		try {
+//			productsMap = loadProducts(new File("./products.csv"));
+//		} catch (IOException e) {
+//			throw new RuntimeException(e);
+//		}
+//	}
 
+	
 	public Map<String, Product> getProducts() {
 		return productsMap;
 	}
@@ -203,13 +209,25 @@ public class DBRepository {
 		return lines;
 	}
 
-	private Map<String, Product> loadProducts(File productsFile) throws IOException {
+	public Map<String, Product> loadProducts(File productsFile) throws IOException {
 
 		Map<String, Product> products = Maps.newLinkedHashMap();
-		try (CSVParser csvParser = new CSVParser(new FileReader(productsFile), CSVFormat.RFC4180)) {
-			for (CSVRecord record : csvParser.getRecords()) {
-				Product product = new Product(record.get(0), record.get(1), record.get(2));
-				products.put(product.getName().toUpperCase(), product);
+		//try (CSVParser csvParser = new CSVParser(new FileReader(productsFile), CSVFormat.RFC4180)) {
+		try (Reader reader = new InputStreamReader(new FileInputStream(productsFile));) {
+			CSVReader csvReader = Utils.getCsvReaderUsingSeparator(reader, ";");
+			//for (CSVRecord record : csvParser.getRecords()) {
+			String[] record = null;
+			try {
+				while ((record = csvReader.readNext()) != null) {
+					Product product = new Product(record[0], record[2], record[1]);
+					products.put(Utils.normalize(product.getName()), product);
+				}
+			} catch (CsvValidationException e) {
+				throw new RuntimeException(e);
+				
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				throw new RuntimeException(e);
 			}
 
 		}

@@ -19,4 +19,6 @@ public interface ProductsService {
 	public String getProductsCsvFromWoo();
 
 	public List<String> bulkUpsert(MultipartFile file);
+	
+	public void comparar();
 }

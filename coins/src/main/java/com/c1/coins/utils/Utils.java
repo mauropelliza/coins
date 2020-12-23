@@ -1,6 +1,8 @@
 package com.c1.coins.utils;
 
 import java.io.Reader;
+import java.text.Normalizer;
+import java.text.Normalizer.Form;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -14,6 +16,11 @@ public class Utils {
 	private static DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 	private static double EPSILON = 0.001;
 
+	public static String normalize(String input) {
+		return Normalizer.normalize(input, Normalizer.Form.NFD)
+				.replaceAll("[^\\p{ASCII}]", "").toUpperCase().trim();
+	}
+	
 	public static String sanitize(Object obj) {
 		if (obj == null) {
 			return "null";

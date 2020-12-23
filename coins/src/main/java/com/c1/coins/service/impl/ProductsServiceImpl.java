@@ -1,8 +1,11 @@
 package com.c1.coins.service.impl;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.text.Normalizer;
+import java.text.Normalizer.Form;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,6 +33,7 @@ import com.c1.coins.utils.Utils;
 import com.c1.coins.utils.VisibilityEnum;
 import com.c1.coins.validators.CsvReadingException;
 import com.c1.coins.validators.ProductValidator;
+import com.google.common.collect.Lists;
 import com.icoderman.woocommerce.EndpointBaseType;
 import com.icoderman.woocommerce.WooCommerce;
 import com.opencsv.CSVReader;
@@ -48,11 +52,11 @@ public class ProductsServiceImpl implements ProductsService {
 
 	@Value("${spring.api.server}")
 	private String woocommerceServer;
-	
-	@Value("${csv-separator}") 
+
+	@Value("${csv-separator}")
 	private String csvSeparator;
-	
-	@Value("${fields-per-row}") 
+
+	@Value("${fields-per-row}")
 	private int fiedsPerRow;
 
 	@Autowired
@@ -60,10 +64,10 @@ public class ProductsServiceImpl implements ProductsService {
 
 	@Autowired
 	private ProductReportValidator reportValidator;
-	
+
 	@Autowired
 	private ProductUpdaterService productUpdaterService;
-	
+
 	@Autowired
 	private ResultsToCsvSerializer serializer;
 
@@ -111,6 +115,53 @@ public class ProductsServiceImpl implements ProductsService {
 	}
 
 	@Override
+	public void comparar() {
+		List<ProductFull> dbList = dBRepository.getProductsFromWoo();
+		Map<String, Product> map = null;
+		try {
+			map = dBRepository.loadProducts(new File("./nuevos_ingresos.csv"));
+		} catch (IOException e) {
+			throw new RuntimeException();
+		}
+
+		List<String> notFound = Lists.newArrayList();
+		List<String> differentCoins = Lists.newArrayList();
+		//System.out.println(map.keySet() + "\n\n");
+
+		List<String> errorList = Lists.newArrayList();
+		List<String> dbNames = dbList.stream().map(x -> Utils.normalize(x.getTitle())).collect(Collectors.toList());
+		for(String name : map.keySet()) {
+			if(!dbNames.contains(name)) {
+				errorList.add(name);
+			} 
+		}
+		
+		
+		for (ProductFull pf : dbList) {
+			Product csvProduct = map.get(Utils.normalize(pf.getTitle()));
+			if (csvProduct == null) {
+				if (pf.getVisible()) {
+					notFound.add(pf.getTitle() + " No existe en el excel, VISIBLE: " + pf.getVisible());
+//					System.out.println(pf.getTitle().toUpperCase().trim());
+				}
+				continue;
+			}
+
+//			String dbCoins = pf.getDbCoins() == null ? "0.0" : pf.getDbCoins();
+//			if (!Double.valueOf(dbCoins).equals(csvProduct.getCoins())) {
+//				differentCoins.add(pf.getTitle() + " No tiene los coins iguales db " + dbCoins + " csv " + csvProduct.getCoins());
+//			}
+
+		}
+//		
+//		notFound.stream().forEach(x -> System.out.println(x));
+//		differentCoins.stream().forEach(x -> System.out.println(x));
+		errorList.stream().forEach(x -> System.out.println(x));
+	}
+
+	
+	
+	@Override
 	public String getProductsCsvFromWoo() {
 		List<ProductFull> products = getProductsFromWoo();
 		ProductToCsvSerializer serializer = new ProductToCsvSerializer();
@@ -119,17 +170,20 @@ public class ProductsServiceImpl implements ProductsService {
 		for (ProductFull line : products) {
 			rows.append(serializer.toString(line));
 		}
-		
+
 		return rows.toString();
 	}
 
+	public static void main(String[] args) {
+		System.out.println(Utils.normalize("Ñ"));
+	}
 	@Override
 	public List<String> bulkUpsert(MultipartFile file) {
 		List<String> output = new ArrayList<String>();
-		
+
 		try (Reader reader = new InputStreamReader(file.getInputStream());) {
 			CSVReader csvReader = Utils.getCsvReaderUsingSeparator(reader, csvSeparator);
-			
+
 			// HEADER DE LOS RESULTADOS
 			output.add(serializer.header());
 
@@ -138,32 +192,32 @@ public class ProductsServiceImpl implements ProductsService {
 				// inicializamos el builder con los datos de la fila
 				StringBuilder sb = new StringBuilder();
 				sb.append(String.join(csvSeparator, currentLine));
-				
+
 				List<String> resultados = new ArrayList<String>();
 				if (currentLine.length < ROW_LENGTH) {
 					sb.append(getErrorCantidadDeColumnas(sb.toString()));
 					output.add(sb.toString());
 					continue; // asi evitamos errores por null pointer
 				}
-				
-				if(StringUtils.isBlank(currentLine[8])) {
+
+				if (StringUtils.isBlank(currentLine[8])) {
 					sb.append(csvSeparator + "Sin procesar - debe ingresar una Acción");
 					output.add(sb.toString() + LINE_ENDING);
 					continue; // si no se especifica una accion, no se procesa la fila
 				}
-				
+
 				CsvProduct product = new CsvProduct();
-				
-				if(StringUtils.isBlank(currentLine[1])) {
+
+				if (StringUtils.isBlank(currentLine[1])) {
 					resultados.add("El nombre del producto es obligatorio");
 				} else {
-					if(currentLine[1].contains(csvSeparator)) {
-						resultados.add("El nombre del producto no puede contener el caracter \""+ csvSeparator + "\"");
+					if (currentLine[1].contains(csvSeparator)) {
+						resultados.add("El nombre del producto no puede contener el caracter \"" + csvSeparator + "\"");
 					} else {
 						product.setTitle(StringUtils.normalizeSpace(currentLine[1]));
 					}
 				}
-				
+
 				// VALIDAMOS FORMATO DEL ID SOLO SI LA ACCION ES MODIFICAR
 				if (CsvActionsEnum.MODIFICAR.getValue().equalsIgnoreCase(currentLine[8])
 						&& !NumberUtils.isParsable(currentLine[0])) {
@@ -172,25 +226,25 @@ public class ProductsServiceImpl implements ProductsService {
 						&& NumberUtils.isParsable(currentLine[0])) {
 					product.setId(Integer.parseInt(currentLine[0]));
 				}
-				
-				if(StringUtils.isBlank(currentLine[4])) {
+
+				if (StringUtils.isBlank(currentLine[4])) {
 					resultados.add("El campo USD no puede quedar vacío");
 				} else {
 					product.setCsvUsd(currentLine[4]);
 				}
-				
-				if(StringUtils.isBlank(currentLine[5])) {
+
+				if (StringUtils.isBlank(currentLine[5])) {
 					resultados.add("El campo Currency no puede quedar vacío");
 				} else {
 					product.setCsvCurrency(currentLine[5]);
 				}
-				
-				if(StringUtils.isBlank(currentLine[6])) {
+
+				if (StringUtils.isBlank(currentLine[6])) {
 					resultados.add("El campo Currency Type no puede quedar vacío");
 				} else {
 					product.setCsvCurrencyType(currentLine[6]);
 				}
-				
+
 				// SE VALIDAN LOS DOS CAMPOS DE COINS Y SE OBTIENE UN VALOR
 				// O BIEN UN MENSAJE DE ERROR
 				String validCoins = getValidCoins(currentLine[2], currentLine[3]);
@@ -216,7 +270,8 @@ public class ProductsServiceImpl implements ProductsService {
 					product.setAccion(currentLine[8]);
 				}
 
-				// SE VALIDA LA EXISTENCIA DEL ID, SOLO SI HAY UN ID NUMERICO Y LA ACCION ES MODIFICAR
+				// SE VALIDA LA EXISTENCIA DEL ID, SOLO SI HAY UN ID NUMERICO Y LA ACCION ES
+				// MODIFICAR
 				if (product.getId() != null
 						&& CsvActionsEnum.MODIFICAR.getValue().equalsIgnoreCase(product.getAccion())) {
 					String noExiste = reportValidator.validateProductExistance(product.getId());
@@ -232,13 +287,13 @@ public class ProductsServiceImpl implements ProductsService {
 					output.add(sb.toString());
 					continue;
 				}
-				
+
 				// SI NO HAY ERRORES DETECTADOS HASTA EL MOMENTO SE HACE LA QUERY
 				String finalResult;
-				if(CsvActionsEnum.MODIFICAR.getValue().equalsIgnoreCase(product.getAccion())) {
+				if (CsvActionsEnum.MODIFICAR.getValue().equalsIgnoreCase(product.getAccion())) {
 					try {
 						finalResult = productUpdaterService.updateWooCommerceDB(product);
-						if(StringUtils.isBlank(finalResult)) {
+						if (StringUtils.isBlank(finalResult)) {
 							resultados.add("PROCESADO OK");
 						} else {
 							resultados.add(finalResult);
@@ -255,52 +310,52 @@ public class ProductsServiceImpl implements ProductsService {
 						sb.insert(0, getFirstToken(newId, sb));
 						resultados.add("PROCESADO OK");
 					} catch (Exception e) {
-						if(newId != null) { // Se borra porque no se pudo insertar la metadata
+						if (newId != null) { // Se borra porque no se pudo insertar la metadata
 							productUpdaterService.deletePost(newId);
-						} 
+						}
 						resultados.add("HUBO UN ERROR AL INSERTAR ESTE REGISTRO");
 					}
 				}
-			
+
 				sb.append(csvSeparator);
 				sb.append(String.join(" || ", resultados));
 				sb.append(LINE_ENDING);
-				output.add(sb.toString());	
+				output.add(sb.toString());
 			}
 		} catch (IOException e) {
 			throw new CsvReadingException("ocurrió un error al leer el archivo csv");
 		} catch (CsvValidationException e) {
 			throw new CsvReadingException("ocurrió un error al leer el archivo csv");
 		}
-		
+
 		return output;
 	}
 
 	private String getErrorCantidadDeColumnas(String fila) {
 		int count = StringUtils.countMatches(fila, csvSeparator);
 		String message = "";
-		for(int i = count; i < fiedsPerRow; i++) {
+		for (int i = count; i < fiedsPerRow; i++) {
 			message += csvSeparator;
 		}
-		
+
 		return message + "Faltan llenar columnas en esta fila" + LINE_ENDING;
 	}
 
 	private String getFirstToken(Integer token, StringBuilder sb) {
-		if(csvSeparator.charAt(0) == sb.charAt(0))
+		if (csvSeparator.charAt(0) == sb.charAt(0))
 			return Integer.toString(token);
 		else
 			return token + csvSeparator;
 	}
 
 	private String getValidCoins(String dbCoins, String csvCoins) {
-		if(StringUtils.isBlank(dbCoins) && StringUtils.isBlank(csvCoins)) {
+		if (StringUtils.isBlank(dbCoins) && StringUtils.isBlank(csvCoins)) {
 			return "error: Debe proveer un valor para el campo coins";
-		} else if(StringUtils.isNotBlank(dbCoins) && StringUtils.isBlank(csvCoins)) {
+		} else if (StringUtils.isNotBlank(dbCoins) && StringUtils.isBlank(csvCoins)) {
 			return dbCoins;
-		} else if(StringUtils.isBlank(dbCoins) && StringUtils.isNotBlank(csvCoins)) {
+		} else if (StringUtils.isBlank(dbCoins) && StringUtils.isNotBlank(csvCoins)) {
 			return csvCoins;
-		} else if(!dbCoins.trim().equals(csvCoins.trim())) {
+		} else if (!dbCoins.trim().equals(csvCoins.trim())) {
 			return "error: Los campos coins (woo db) y coins (excel) deben tener el mismo valor";
 		} else {
 			return csvCoins;

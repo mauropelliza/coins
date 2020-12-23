@@ -36,6 +36,11 @@ public class ProductsController {
 		return productsService.getAllProducts();
 	}
 	
+	@GetMapping(path="/comparaciones")
+	public void comparar() {
+		productsService.comparar();
+	}
+	
 	@GetMapping(path="/wooc")
 	public List<Object> getAllProductsFromWooc() {
 		return productsService.getAllProductsFromWooc();
