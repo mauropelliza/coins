@@ -48,26 +48,6 @@ public class ProductUpdaterServiceImpl implements ProductUpdaterService {
 		dBRepository.deletePost(postId);
 	}
 	
-	/* private String rollbackInsert(int level, Integer newId) {
-		System.out.println("EJECUTANDO EL ROLLBACK !!!");
-		try {
-			if(level == 1) {
-				dBRepository.deletePost(newId);
-			} else if(level == 2) {
-				dBRepository.deleteRelationship(newId);
-				dBRepository.deletePost(newId);
-			} else if(level == 3) {
-				dBRepository.restoreTaxonomyCounter();
-				dBRepository.deleteRelationship(newId);
-				dBRepository.deletePost(newId);
-			}
-			
-			return "OK";
-		} catch (Exception e) {
-			return "hubo un problema al revertir los cambios, la informacion quedo incosistente";
-		}
-	} */
-	
 	@Override
 	public void hideProduct(Integer productId) {
 		dBRepository.setStock(OUTOFSTOCK, productId);

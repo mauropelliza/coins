@@ -10,3 +10,10 @@ spring:
     username: root
     password: rootaccess
     driverClassName: com.mysql.jdbc.Driver
+  api:
+    client: ck_....
+    secret: cs_....
+    server: http://<<hostname>>:<<port>>
+post-basic-url: http://hostname:port/?post_type=product&#038;p=
+csv-separator: ','
+fields-per-row: 9

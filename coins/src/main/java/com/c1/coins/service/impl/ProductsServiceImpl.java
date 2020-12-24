@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.text.Normalizer;
-import java.text.Normalizer.Form;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -124,7 +122,7 @@ public class ProductsServiceImpl implements ProductsService {
 			throw new RuntimeException();
 		}
 
-		List<String> notFound = Lists.newArrayList();
+		List<ProductFull> notFound = Lists.newArrayList();
 		List<String> differentCoins = Lists.newArrayList();
 		//System.out.println(map.keySet() + "\n\n");
 
@@ -141,22 +139,30 @@ public class ProductsServiceImpl implements ProductsService {
 			Product csvProduct = map.get(Utils.normalize(pf.getTitle()));
 			if (csvProduct == null) {
 				if (pf.getVisible()) {
-					notFound.add(pf.getTitle() + " No existe en el excel, VISIBLE: " + pf.getVisible());
+					//notFound.add(pf.getTitle() + " No existe en el excel, VISIBLE: " + pf.getVisible());
+					notFound.add(pf);
 //					System.out.println(pf.getTitle().toUpperCase().trim());
 				}
 				continue;
 			}
 
-//			String dbCoins = pf.getDbCoins() == null ? "0.0" : pf.getDbCoins();
-//			if (!Double.valueOf(dbCoins).equals(csvProduct.getCoins())) {
-//				differentCoins.add(pf.getTitle() + " No tiene los coins iguales db " + dbCoins + " csv " + csvProduct.getCoins());
-//			}
+			String dbCoins = pf.getDbCoins() == null ? "0.0" : pf.getDbCoins();
+			if (!Double.valueOf(dbCoins).equals(csvProduct.getCoins())) {
+				differentCoins.add(pf.getTitle() + " No tiene los coins iguales db " + dbCoins + " csv " + csvProduct.getCoins());
+			}
 
 		}
 //		
 //		notFound.stream().forEach(x -> System.out.println(x));
-//		differentCoins.stream().forEach(x -> System.out.println(x));
-		errorList.stream().forEach(x -> System.out.println(x));
+		differentCoins.stream().forEach(x -> System.out.println(x));
+//		errorList.stream().forEach(x -> System.out.println(x));
+		
+//		for (ProductFull pf : notFound) {
+//			System.out.println(pf.getId() + " " + pf.getTitle() + " ,");
+//			System.out.println(pf.getTitle() + " No existe en el excel, VISIBLE: " + pf.getVisible());
+//			productUpdaterService.hideProduct(pf.getId());
+//		}
+		
 	}
 
 	
@@ -174,9 +180,6 @@ public class ProductsServiceImpl implements ProductsService {
 		return rows.toString();
 	}
 
-	public static void main(String[] args) {
-		System.out.println(Utils.normalize("Ñ"));
-	}
 	@Override
 	public List<String> bulkUpsert(MultipartFile file) {
 		List<String> output = new ArrayList<String>();
