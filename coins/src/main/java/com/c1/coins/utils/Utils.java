@@ -87,7 +87,7 @@ public class Utils {
 	
 	public static CSVReader getCsvReaderUsingSeparator(Reader reader, String separator) {
 		CSVReaderBuilder builder = new CSVReaderBuilder(reader).withCSVParser(new CSVParserBuilder()
-			    .withSeparator(separator.charAt(0)).withIgnoreLeadingWhiteSpace(true).build());
+			    .withSeparator(separator.charAt(0)).withIgnoreLeadingWhiteSpace(true).withIgnoreQuotations(true).build());
 		return builder.withSkipLines(1).build();
 		
 	}
