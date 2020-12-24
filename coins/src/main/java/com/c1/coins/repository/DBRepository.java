@@ -2,7 +2,6 @@ package com.c1.coins.repository;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -12,9 +11,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
@@ -269,21 +265,23 @@ public class DBRepository {
 				+ "inner join `wp_term_taxonomy` t on r.term_taxonomy_id = t.term_id where r.object_id = "
 				+ productId + " and t.taxonomy = 'product_cat'";
 		System.out.println(findCategory);
-		Integer termId = jdbc.queryForObject(findCategory, Integer.class);
-		System.out.println("El term id de la categoria del producto es: " + termId);
+		List<Integer> termIds = jdbc.queryForList(findCategory, Integer.class);
+		termIds.stream().forEach(t -> System.out.println("El term id de la categoria del producto es: " + t));
 
-		String getCounter = "SELECT `meta_value` FROM `wp_termmeta` WHERE `term_id` = " + termId
-				+ " AND `meta_key` = 'product_count_product_cat'";
-		System.out.println(getCounter);
-		Integer counter = jdbc.queryForObject(getCounter, Integer.class);
-		System.out.println("El contador de la categoria del producto es: " + counter);
-
-		String updateCounter = "update `wp_termmeta` set `meta_value` = "
-				+ getUpdatedTermMetaCounter(counter, visibility) + " WHERE `term_id` = " + termId
-				+ " AND `meta_key` = 'product_count_product_cat'";
-		System.out.println(updateCounter);
-		int rowsAffected = jdbc.update(updateCounter);
-		System.out.println("se actualizo el contador de " + rowsAffected + " filas !");
+		for(Integer termId : termIds) {
+			String getCounter = "SELECT `meta_value` FROM `wp_termmeta` WHERE `term_id` = " + termId
+					+ " AND `meta_key` = 'product_count_product_cat'";
+			System.out.println(getCounter);
+			Integer counter = jdbc.queryForObject(getCounter, Integer.class);
+			System.out.println("El contador de la categoria del producto es: " + counter);
+	
+			String updateCounter = "update `wp_termmeta` set `meta_value` = "
+					+ getUpdatedTermMetaCounter(counter, visibility) + " WHERE `term_id` = " + termId
+					+ " AND `meta_key` = 'product_count_product_cat'";
+			System.out.println(updateCounter);
+			int rowsAffected = jdbc.update(updateCounter);
+			System.out.println("se actualizo el contador de " + rowsAffected + " filas !");
+		}
 	}
 
 	private Integer getUpdatedTermMetaCounter(Integer counter, String visibility) {
@@ -531,6 +529,7 @@ public class DBRepository {
 			+ "(" + postId + ", '_product_version','3.5.6'), (" + postId + ", '_price','450')";
 		System.out.println(update);
 		int rowsAffected = jdbc.update(update);
+		
 		System.out.println("se inserto la información en postmeta para " + rowsAffected + " post !");
 	}
 }
