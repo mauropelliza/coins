@@ -26,7 +26,7 @@ public class LogCanjeByUserLine {
 		// currentCoins - acumulado
 		// Si ya se proceso entonces cantidad de puntos = currentPoints + acumulado
 		int factor = "wc-processing".equals(lineOrder.getParentOrder().getStatus()) ? -1 : 1;
-		return this.parentLine.getUser().getCoins() + (getAccumulatedCoins() * factor);
+		return this.parentLine.getUser().getSpentCoins() + (getAccumulatedCoins() * factor);
 	}
 
 	public String getProduct() {

@@ -47,14 +47,19 @@ public class User {
 	public String getBillingCity() {
 		return this.meta.get("billing_city");
 	}
-	
-	public Double getCoins() {
+
+	public Double getSpentCoins() {
 		return Utils.toDouble(this.meta.get("mycred_default"));
 	}
-	
+
 	@Override
 	public String toString() {
 		return displayName;
 	}
+
+	public Double getAccumulatedCoins() {
+		return Utils.toDouble(this.meta.get("initial_points"));
+	}
+
 
 }

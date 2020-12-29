@@ -40,22 +40,21 @@ public class DBRepository {
 
 	@Autowired
 	private JdbcTemplate jdbc;
-	
+
 	@Value("${post-basic-url}")
 	private String postBasicUrl;
 
 	private Map<Integer, User> users = Maps.newHashMap();
 	private Map<String, Product> productsMap;
 
-//	public DBRepository() {
-//		try {
-//			productsMap = loadProducts(new File("./products.csv"));
-//		} catch (IOException e) {
-//			throw new RuntimeException(e);
-//		}
-//	}
+	public DBRepository() {
+		try {
+			productsMap = loadProducts(new File("./products.csv"));
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
-	
 	public Map<String, Product> getProducts() {
 		return productsMap;
 	}
@@ -118,6 +117,39 @@ public class DBRepository {
 		return jdbc.query(query, new StringMapExtractor());
 	}
 
+	public List<User> retrieveUsers() {
+		users.clear();
+
+		// si no estaba buscamos toda la info de ese user
+		// datos principales
+		String query = "SELECT ID, user_login,user_email,display_name FROM wp_users order by ID";
+		List<User> userList = jdbc.query(query, new RowMapper<User>() {
+
+			@Override
+			public User mapRow(ResultSet rs, int rowNumber) throws SQLException {
+				User user = new User();
+				Integer userId = rs.getInt("ID");
+				user.setId(userId);
+				user.setDisplayName(rs.getString("display_name"));
+				user.setEmail(rs.getString("user_email"));
+				System.out.println(userId + " " + user.getDisplayName());
+				String metadataQuery = "SELECT * FROM wp_usermeta WHERE user_id =" + userId;
+				Map<String, String> userMetadata = jdbc.query(metadataQuery, new StringMapExtractor());
+
+				for (Map.Entry<String, String> entry : userMetadata.entrySet()) {
+					user.addMeta(entry.getKey(), entry.getValue());
+				}
+				users.put(user.getId(), user);
+
+				return user;
+
+			}
+		});
+		// metadatos
+
+		return userList;
+	}
+
 	public User retrieveUser(Integer userId) {
 		User user = users.get(userId);
 		if (user != null) {
@@ -167,7 +199,7 @@ public class DBRepository {
 			}
 		});
 	}
-	
+
 	public List<LineOrder> retrieveLineOrders(Integer orderId) {
 
 		String wcQuery = "SELECT order_id, order_item_id, order_item_name FROM wp_woocommerce_order_items WHERE order_id="
