@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.c1.coins.model.BuyReportProductOrderLine;
+import com.c1.coins.model.BuyReportProductLine;
 import com.c1.coins.model.Order;
 import com.c1.coins.service.OrdersService;
 
@@ -35,8 +35,8 @@ public class OrdersController {
 		return ordersService.getOrderById(orderId);
 	}
 	
-	@GetMapping( path = "/buyReport")
-	public List<BuyReportProductOrderLine> createBuyReport(
+	@GetMapping( path = "/buy-report")
+	public List<BuyReportProductLine> createBuyReport(
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate, 
 			@RequestParam(required = false)  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate, 
 			@RequestParam(required = false) Integer orderStatus) {

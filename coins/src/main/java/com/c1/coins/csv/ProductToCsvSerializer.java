@@ -1,6 +1,6 @@
 package com.c1.coins.csv;
 
-import com.c1.coins.model.ProductFull;
+import com.c1.coins.model.ProductDetail;
 import com.c1.coins.utils.CSVLine;
 
 public class ProductToCsvSerializer {
@@ -20,15 +20,15 @@ public class ProductToCsvSerializer {
 
 	}
 
-	public String toString(ProductFull product) {
+	public String toString(ProductDetail product) {
 		CSVLine cells = new CSVLine();
 		cells.add(product.getId());
 		cells.add(product.getTitle());
-		cells.add(product.getDbCoins());
-		cells.add(product.getCsvCoins());
-		cells.add(product.getCsvUsd());
-		cells.add(product.getCsvCurrency());
-		cells.add(product.getCsvCurrencyType());
+		cells.add(product.getWooCoins());
+		cells.add(product.getHxCoins());
+		cells.add(product.getHxUsd());
+		cells.add(product.getHxCurrency());
+		cells.add(product.getHxCurrencyType());
 		cells.add(product.getVisible());
 
 		return cells.toString();

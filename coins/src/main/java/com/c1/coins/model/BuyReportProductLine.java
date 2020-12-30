@@ -3,14 +3,16 @@ package com.c1.coins.model;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.c1.coins.model.Currency;
 
-public class BuyReportProductOrderLine {
+public class BuyReportProductLine {
 	private Integer quantity = 0;;
 	private String product;
 	private Double price = 0.0;
-	private List<BuyReportItemRequester> requesters = Lists.newArrayList();
+	private Currency currency;
+	private List<BuyReportProductLineDetail> requesters = Lists.newArrayList();
 
-	public BuyReportProductOrderLine() {
+	public BuyReportProductLine() {
 		super();
 	}
 
@@ -42,11 +44,11 @@ public class BuyReportProductOrderLine {
 		this.price = price;
 	}
 
-	public List<BuyReportItemRequester> getRequesters() {
+	public List<BuyReportProductLineDetail> getRequesters() {
 		return requesters;
 	}
 
-	public void setRequesters(List<BuyReportItemRequester> requesters) {
+	public void setRequesters(List<BuyReportProductLineDetail> requesters) {
 		this.requesters = requesters;
 	}
 
@@ -54,9 +56,19 @@ public class BuyReportProductOrderLine {
 		this.quantity += qty;
 	}
 
-	public void addRequester(BuyReportItemRequester buyReportItemRequester) {
+	public void addRequester(BuyReportProductLineDetail buyReportItemRequester) {
 		this.requesters.add(buyReportItemRequester);
 
 	}
+
+	public Currency getCurrency() {
+		return currency;
+	}
+
+	public void setCurrency(Currency currency) {
+		this.currency = currency;
+	}
+	
+	
 
 }

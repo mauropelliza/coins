@@ -5,10 +5,10 @@ public class Fields {
 	public final static String ID = "id";
 	public final static String TITLE = "title";
 	public final static String STOCK = "stock";
-	public final static String DBCOINS = "dbCoins";
-	public final static String CSVCOINS = "csvCoins";
-	public final static String CSVUSD = "csvUsd";
-	public final static String CSVCURRENCY = "csvCurrency";
-	public final static String CSVCURRENCYTYPE = "csvCurrencyType";
+	public final static String WOO_COINS = "dbCoins";
+	public final static String HX_COINS = "csvCoins";
+	public final static String HX_USD = "csvUsd";
+	public final static String HX_CURRENCY = "csvCurrency";
+	public final static String HX_CURRENCYTYPE = "csvCurrencyType";
 	public final static String VISIBLE = "visible";
 }

@@ -17,8 +17,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.c1.coins.model.Product;
-import com.c1.coins.model.ProductFull;
+import com.c1.coins.model.ProductDetail;
+import com.c1.coins.model.ProductPrice;
 import com.c1.coins.service.ProductsService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -32,8 +32,8 @@ public class ProductsController {
 	private ProductsService productsService;
 	
 	@GetMapping
-	public List<Product> getAllProducts() {
-		return productsService.getAllProducts();
+	public List<ProductPrice> getProductPrices() {
+		return productsService.getProductPrices();
 	}
 	
 	@GetMapping(path="/comparaciones")
@@ -63,7 +63,7 @@ public class ProductsController {
 		} else {
 			// uso jackson para convertir la lista a un string de json
 			ObjectMapper mapper = new ObjectMapper();
-			List<ProductFull> productList = productsService.getProductsFromWoo();
+			List<ProductDetail> productList = productsService.getProductsFromWoo();
 			String jsonString = mapper.writeValueAsString(productList);
 			response.setContentType(ACCEPT_JSON);
 			response.getWriter().write(jsonString);

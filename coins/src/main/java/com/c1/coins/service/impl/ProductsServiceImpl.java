@@ -19,9 +19,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.c1.coins.csv.ProductToCsvSerializer;
 import com.c1.coins.csv.ResultsToCsvSerializer;
-import com.c1.coins.model.CsvProduct;
+import com.c1.coins.model.ProductDetailWithAction;
 import com.c1.coins.model.Product;
-import com.c1.coins.model.ProductFull;
+import com.c1.coins.model.ProductDetail;
+import com.c1.coins.model.ProductPrice;
 import com.c1.coins.repository.DBRepository;
 import com.c1.coins.service.ProductUpdaterService;
 import com.c1.coins.service.ProductsService;
@@ -88,10 +89,10 @@ public class ProductsServiceImpl implements ProductsService {
 	}
 
 	@Override
-	public List<Product> getAllProducts() {
-		Map<String, Product> productMap = dBRepository.getProducts();
+	public List<ProductPrice> getProductPrices() {
+		Map<String, ProductPrice> productMap = dBRepository.getProductPrices();
 		if (productMap.isEmpty())
-			return new ArrayList<Product>();
+			return Lists.newArrayList();
 
 		return productMap.values().stream().collect(Collectors.toList());
 	}
@@ -108,47 +109,48 @@ public class ProductsServiceImpl implements ProductsService {
 	}
 
 	@Override
-	public List<ProductFull> getProductsFromWoo() {
-		return dBRepository.getProductsFromWoo();
+	public List<ProductDetail> getProductsFromWoo() {
+		return dBRepository.getProductsDetail();
 	}
 
 	@Override
 	public void comparar() {
-		List<ProductFull> dbList = dBRepository.getProductsFromWoo();
+		List<ProductDetail> dbList = dBRepository.getProductsDetail();
 		Map<String, Product> map = null;
 		try {
-			map = dBRepository.loadProducts(new File("./nuevos_ingresos.csv"));
+			map = dBRepository.loadProductsFromFile(new File("./nuevos_ingresos.csv"));
 		} catch (IOException e) {
 			throw new RuntimeException();
 		}
 
-		List<ProductFull> notFound = Lists.newArrayList();
+		List<ProductDetail> notFound = Lists.newArrayList();
 		List<String> differentCoins = Lists.newArrayList();
-		//System.out.println(map.keySet() + "\n\n");
+		// System.out.println(map.keySet() + "\n\n");
 
 		List<String> errorList = Lists.newArrayList();
 		List<String> dbNames = dbList.stream().map(x -> Utils.normalize(x.getTitle())).collect(Collectors.toList());
-		for(String name : map.keySet()) {
-			if(!dbNames.contains(name)) {
+		for (String name : map.keySet()) {
+			if (!dbNames.contains(name)) {
 				errorList.add(name);
-			} 
+			}
 		}
-		
-		
-		for (ProductFull pf : dbList) {
+
+		for (ProductDetail pf : dbList) {
 			Product csvProduct = map.get(Utils.normalize(pf.getTitle()));
 			if (csvProduct == null) {
 				if (pf.getVisible()) {
-					//notFound.add(pf.getTitle() + " No existe en el excel, VISIBLE: " + pf.getVisible());
+					// notFound.add(pf.getTitle() + " No existe en el excel, VISIBLE: " +
+					// pf.getVisible());
 					notFound.add(pf);
 //					System.out.println(pf.getTitle().toUpperCase().trim());
 				}
 				continue;
 			}
 
-			String dbCoins = pf.getDbCoins() == null ? "0.0" : pf.getDbCoins();
+			String dbCoins = pf.getWooCoins() == null ? "0.0" : pf.getWooCoins();
 			if (!Double.valueOf(dbCoins).equals(csvProduct.getCoins())) {
-				differentCoins.add(pf.getTitle() + " No tiene los coins iguales db " + dbCoins + " csv " + csvProduct.getCoins());
+				differentCoins.add(
+						pf.getTitle() + " No tiene los coins iguales db " + dbCoins + " csv " + csvProduct.getCoins());
 			}
 
 		}
@@ -156,24 +158,22 @@ public class ProductsServiceImpl implements ProductsService {
 //		notFound.stream().forEach(x -> System.out.println(x));
 		differentCoins.stream().forEach(x -> System.out.println(x));
 //		errorList.stream().forEach(x -> System.out.println(x));
-		
+
 //		for (ProductFull pf : notFound) {
 //			System.out.println(pf.getId() + " " + pf.getTitle() + " ,");
 //			System.out.println(pf.getTitle() + " No existe en el excel, VISIBLE: " + pf.getVisible());
 //			productUpdaterService.hideProduct(pf.getId());
 //		}
-		
+
 	}
 
-	
-	
 	@Override
 	public String getProductsCsvFromWoo() {
-		List<ProductFull> products = getProductsFromWoo();
+		List<ProductDetail> products = getProductsFromWoo();
 		ProductToCsvSerializer serializer = new ProductToCsvSerializer();
 		StringBuffer rows = new StringBuffer();
 		rows.append(serializer.header());
-		for (ProductFull line : products) {
+		for (ProductDetail line : products) {
 			rows.append(serializer.toString(line));
 		}
 
@@ -209,7 +209,7 @@ public class ProductsServiceImpl implements ProductsService {
 					continue; // si no se especifica una accion, no se procesa la fila
 				}
 
-				CsvProduct product = new CsvProduct();
+				ProductDetailWithAction product = new ProductDetailWithAction();
 
 				if (StringUtils.isBlank(currentLine[1])) {
 					resultados.add("El nombre del producto es obligatorio");
@@ -233,19 +233,19 @@ public class ProductsServiceImpl implements ProductsService {
 				if (StringUtils.isBlank(currentLine[4])) {
 					resultados.add("El campo USD no puede quedar vacío");
 				} else {
-					product.setCsvUsd(currentLine[4]);
+					product.setHxUsd(currentLine[4]);
 				}
 
 				if (StringUtils.isBlank(currentLine[5])) {
 					resultados.add("El campo Currency no puede quedar vacío");
 				} else {
-					product.setCsvCurrency(currentLine[5]);
+					product.setHxCurrency(currentLine[5]);
 				}
 
 				if (StringUtils.isBlank(currentLine[6])) {
 					resultados.add("El campo Currency Type no puede quedar vacío");
 				} else {
-					product.setCsvCurrencyType(currentLine[6]);
+					product.setHxCurrencyType(currentLine[6]);
 				}
 
 				// SE VALIDAN LOS DOS CAMPOS DE COINS Y SE OBTIENE UN VALOR
@@ -254,7 +254,7 @@ public class ProductsServiceImpl implements ProductsService {
 				if (validCoins.startsWith("error: ")) {
 					resultados.add(StringUtils.remove(validCoins, "error: "));
 				} else {
-					product.setDbCoins(validCoins);
+					product.setWooCoins(validCoins);
 				}
 
 				// SE VALIDA EL CAMPO VISIBLE
