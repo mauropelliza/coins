@@ -8,8 +8,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class ResultsToCsvSerializer {
-	@Value("${csv-separator}") 
-	private String csvSeparator;
+	private String csvSeparator = ",";
 	
 	private List<String> cells = null;
 	

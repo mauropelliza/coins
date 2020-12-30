@@ -52,8 +52,7 @@ public class ProductsServiceImpl implements ProductsService {
 	@Value("${spring.api.server}")
 	private String woocommerceServer;
 
-	@Value("${csv-separator}")
-	private String csvSeparator;
+	private String csvSeparator = ",";
 
 	@Value("${fields-per-row}")
 	private int fiedsPerRow;

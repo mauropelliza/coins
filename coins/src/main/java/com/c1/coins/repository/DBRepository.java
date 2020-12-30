@@ -267,7 +267,7 @@ public class DBRepository {
 	public Map<String, ProductPrice> loadProductPricesFromDB() throws IOException {
 
 		Map<String, ProductPrice> productPrices = Maps.newLinkedHashMap();
-		String wcQuery = "SELECT * FROM prduct_prices";
+		String wcQuery = "SELECT * FROM product_prices";
 		jdbc.query(wcQuery, new RowMapper<ProductPrice>() {
 			@Override
 			public ProductPrice mapRow(ResultSet rs, int rowNum) throws SQLException {
