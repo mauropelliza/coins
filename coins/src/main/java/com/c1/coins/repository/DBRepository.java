@@ -242,7 +242,7 @@ public class DBRepository {
 		Map<String, Product> products = Maps.newLinkedHashMap();
 		//try (CSVParser csvParser = new CSVParser(new FileReader(productsFile), CSVFormat.RFC4180)) {
 		try (Reader reader = new InputStreamReader(new FileInputStream(productsFile));) {
-			CSVReader csvReader = Utils.getCsvReaderUsingSeparator(reader, ";");
+			CSVReader csvReader = Utils.getCsvReaderUsingSeparator(reader, ",");
 			//for (CSVRecord record : csvParser.getRecords()) {
 			String[] record = null;
 			try {
