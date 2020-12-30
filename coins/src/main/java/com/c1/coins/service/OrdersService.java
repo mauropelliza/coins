@@ -3,7 +3,7 @@ package com.c1.coins.service;
 import java.time.LocalDate;
 import java.util.List;
 
-import com.c1.coins.model.BuyReportProductOrderLine;
+import com.c1.coins.model.BuyReportProductLine;
 import com.c1.coins.model.Order;
 
 public interface OrdersService {
@@ -11,5 +11,5 @@ public interface OrdersService {
 
 	public Order getOrderById(Integer orderId);
 
-	public List<BuyReportProductOrderLine> createBuyReport(LocalDate startDate, LocalDate endDate, Integer orderStatus);
+	public List<BuyReportProductLine> createBuyReport(LocalDate startDate, LocalDate endDate, Integer orderStatus);
 }

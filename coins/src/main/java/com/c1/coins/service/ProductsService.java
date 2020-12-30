@@ -4,17 +4,17 @@ import java.util.List;
 
 import org.springframework.web.multipart.MultipartFile;
 
-import com.c1.coins.model.Product;
-import com.c1.coins.model.ProductFull;
+import com.c1.coins.model.ProductDetail;
+import com.c1.coins.model.ProductPrice;
 
 public interface ProductsService {
-	public List<Product> getAllProducts();
+	public List<ProductPrice> getProductPrices();
 
 	public List<Object> getAllProductsFromWooc();
 
 	public void setVisibility(Integer productId, String visibility);
 	
-	public List<ProductFull> getProductsFromWoo();
+	public List<ProductDetail> getProductsFromWoo();
 
 	public String getProductsCsvFromWoo();
 

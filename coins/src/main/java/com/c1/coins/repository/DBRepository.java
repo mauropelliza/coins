@@ -20,11 +20,12 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
 import com.c1.coins.model.Category;
-import com.c1.coins.model.CsvProduct;
+import com.c1.coins.model.ProductDetailWithAction;
 import com.c1.coins.model.LineOrder;
 import com.c1.coins.model.Order;
 import com.c1.coins.model.Product;
-import com.c1.coins.model.ProductFull;
+import com.c1.coins.model.ProductDetail;
+import com.c1.coins.model.ProductPrice;
 import com.c1.coins.model.User;
 import com.c1.coins.utils.Fields;
 import com.c1.coins.utils.StringMapExtractor;
@@ -45,18 +46,18 @@ public class DBRepository {
 	private String postBasicUrl;
 
 	private Map<Integer, User> users = Maps.newHashMap();
-	private Map<String, Product> productsMap;
+	private Map<String, ProductPrice> productPrices;
 
-	public DBRepository() {
-		try {
-			productsMap = loadProducts(new File("./products.csv"));
-		} catch (IOException e) {
-			throw new RuntimeException(e);
+	public Map<String, ProductPrice> getProductPrices() {
+		if (productPrices == null) {
+			try {
+				productPrices = loadProductPricesFromDB();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+
 		}
-	}
-
-	public Map<String, Product> getProducts() {
-		return productsMap;
+		return productPrices;
 	}
 
 	public List<Order> getOrdersBetweenDates(LocalDate startDate, LocalDate endDate, Integer orderStatus) {
@@ -208,7 +209,7 @@ public class DBRepository {
 			@Override
 			public LineOrder mapRow(ResultSet rs, int rowNum) throws SQLException {
 				LineOrder line = new LineOrder();
-				line.setProduct(rs.getString("order_item_name"));
+				line.setProductName(rs.getString("order_item_name"));
 				line.setProductIdNumber(Integer.getInteger(rs.getString("order_item_id")));
 				return line;
 			}
@@ -216,7 +217,7 @@ public class DBRepository {
 
 		for (LineOrder line : lines) {
 			if (line.getProductIdNumber() == null) {
-				System.out.println(line.getProduct() + " no tiene id de producto, no se puede obtener metadata");
+				System.out.println(line.getProductName() + " no tiene id de producto, no se puede obtener metadata");
 			} else {
 				String wcMetaQuery = "SELECT * FROM wp_woocommerce_order_itemmeta WHERE order_item_id="
 						+ line.getProductIdNumber();
@@ -227,23 +228,24 @@ public class DBRepository {
 				}
 			}
 
-			Product product = this.productsMap.get(line.getProduct().toUpperCase());
-			if (product != null) {
-				line.setProductCoinsInCatalog(product.getCoins());
-				line.setProductUsdInCatalog(product.getUsd());
+			ProductPrice productPrice = this.getProductPrices().get(line.getProductName());
+			if (productPrice != null) {
+				line.setProductCoinsInCatalog(productPrice.getCoins());
+				line.setProductPriceInCatalog(productPrice.getPrice());
 			}
 		}
 
 		return lines;
 	}
 
-	public Map<String, Product> loadProducts(File productsFile) throws IOException {
+	public Map<String, Product> loadProductsFromFile(File productsFile) throws IOException {
 
 		Map<String, Product> products = Maps.newLinkedHashMap();
-		//try (CSVParser csvParser = new CSVParser(new FileReader(productsFile), CSVFormat.RFC4180)) {
+		// try (CSVParser csvParser = new CSVParser(new FileReader(productsFile),
+		// CSVFormat.RFC4180)) {
 		try (Reader reader = new InputStreamReader(new FileInputStream(productsFile));) {
-			CSVReader csvReader = Utils.getCsvReaderUsingSeparator(reader, ";");
-			//for (CSVRecord record : csvParser.getRecords()) {
+			CSVReader csvReader = Utils.getCsvReaderUsingSeparator(reader, ",");
+			// for (CSVRecord record : csvParser.getRecords()) {
 			String[] record = null;
 			try {
 				while ((record = csvReader.readNext()) != null) {
@@ -252,7 +254,7 @@ public class DBRepository {
 				}
 			} catch (CsvValidationException e) {
 				throw new RuntimeException(e);
-				
+
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				throw new RuntimeException(e);
@@ -260,6 +262,25 @@ public class DBRepository {
 
 		}
 		return products;
+	}
+
+	public Map<String, ProductPrice> loadProductPricesFromDB() throws IOException {
+
+		Map<String, ProductPrice> productPrices = Maps.newLinkedHashMap();
+		String wcQuery = "SELECT * FROM prduct_prices";
+		jdbc.query(wcQuery, new RowMapper<ProductPrice>() {
+			@Override
+			public ProductPrice mapRow(ResultSet rs, int rowNum) throws SQLException {
+				ProductPrice productPrice = new ProductPrice();
+				productPrice.setId(rs.getInt("product_id"));
+				productPrice.setTitle(rs.getString("product_name"));
+				productPrice.setPrice(rs.getDouble("price"));
+				productPrice.setPrice(rs.getDouble("coins"));
+				productPrices.put(productPrice.getTitle(), productPrice);
+				return productPrice;
+			}
+		});
+		return productPrices;
 	}
 
 	public void setStock(String stock, Integer productId) {
@@ -270,18 +291,18 @@ public class DBRepository {
 	}
 
 	public void setProductName(String productName, Integer productId) {
-		String update = "update `wp_posts` set `post_title` = '" + productName + "',  `post_name` = '" 
+		String update = "update `wp_posts` set `post_title` = '" + productName + "',  `post_name` = '"
 				+ productName.replace(" ", "-") + "' where `post_type` = 'product' and `ID` = " + productId;
 		int rowsAffected = jdbc.update(update);
 		System.out.println("se actualizo el nombre de producto de " + rowsAffected + " filas !");
 	}
 
 	public void setProductDbCoins(String dbCoins, Integer productId) {
-		String update = "update `wp_postmeta` set `meta_value` = '" + dbCoins + 
-				"' where `meta_key` = '_price' and `post_id` = " + productId;
-		
+		String update = "update `wp_postmeta` set `meta_value` = '" + dbCoins
+				+ "' where `meta_key` = '_price' and `post_id` = " + productId;
+
 		int rowsAffected = jdbc.update(update);
-		System.out.println("se actualizo el precio en coins de producto de " + rowsAffected + " filas !");		
+		System.out.println("se actualizo el precio en coins de producto de " + rowsAffected + " filas !");
 	}
 
 	public void updateProductDates(Integer productId) {
@@ -294,19 +315,19 @@ public class DBRepository {
 
 	public void updateTermMetaCounters(Integer productId, String visibility) {
 		String findCategory = "SELECT t.term_id FROM `wp_term_relationships` r "
-				+ "inner join `wp_term_taxonomy` t on r.term_taxonomy_id = t.term_id where r.object_id = "
-				+ productId + " and t.taxonomy = 'product_cat'";
+				+ "inner join `wp_term_taxonomy` t on r.term_taxonomy_id = t.term_id where r.object_id = " + productId
+				+ " and t.taxonomy = 'product_cat'";
 		System.out.println(findCategory);
 		List<Integer> termIds = jdbc.queryForList(findCategory, Integer.class);
 		termIds.stream().forEach(t -> System.out.println("El term id de la categoria del producto es: " + t));
 
-		for(Integer termId : termIds) {
+		for (Integer termId : termIds) {
 			String getCounter = "SELECT `meta_value` FROM `wp_termmeta` WHERE `term_id` = " + termId
 					+ " AND `meta_key` = 'product_count_product_cat'";
 			System.out.println(getCounter);
 			Integer counter = jdbc.queryForObject(getCounter, Integer.class);
 			System.out.println("El contador de la categoria del producto es: " + counter);
-	
+
 			String updateCounter = "update `wp_termmeta` set `meta_value` = "
 					+ getUpdatedTermMetaCounter(counter, visibility) + " WHERE `term_id` = " + termId
 					+ " AND `meta_key` = 'product_count_product_cat'";
@@ -397,31 +418,37 @@ public class DBRepository {
 		System.out.println("Cantidad de filas actualizadas: " + rows);
 	}
 
-	public List<ProductFull> getProductsFromWoo() {
-		String query = "SELECT DISTINCT p.id " + Fields.ID + ", p.post_title " + Fields.TITLE + ", pm.meta_value " + Fields.STOCK
-				+ ", pm2.meta_value " + Fields.DBCOINS
+	
+	/**
+	 * Obtiene todos los datos de woo y tb de la product_prices, la cual tiene el mapeo a dolares
+	 * @return
+	 */
+	public List<ProductDetail> getProductsDetail() {
+		String query = "SELECT DISTINCT p.id " + Fields.ID + ", p.post_title " + Fields.TITLE + ", pm.meta_value "
+				+ Fields.STOCK + ", pm2.meta_value " + Fields.WOO_COINS
 				+ ", case when (select count(1) from wp_term_relationships rel where rel.term_taxonomy_id in (6,7,9) "
-				+ "and rel.object_id = p.id) > 0 then FALSE else TRUE END AS " + Fields.VISIBLE 
-				+ ", csv.coins " + Fields.CSVCOINS + ",  csv.price " + Fields.CSVUSD
-				+ ", csv.currency " + Fields.CSVCURRENCY + ", csv.currency_type " + Fields.CSVCURRENCYTYPE
+				+ "and rel.object_id = p.id) > 0 then FALSE else TRUE END AS " + Fields.VISIBLE + ", hxProductPrices.coins "
+				+ Fields.HX_COINS + ",  hxProductPrices.price " + Fields.HX_USD + ", hxProductPrices.currency " + Fields.HX_CURRENCY
+				+ ", hxProductPrices.currency_type " + Fields.HX_CURRENCYTYPE
 				+ " FROM wp_posts p LEFT JOIN wp_postmeta pm ON p.id = pm.post_id "
 				+ "LEFT JOIN wp_postmeta pm2 ON p.id = pm2.post_id "
-				+ "LEFT JOIN product_prices csv on p.id = csv.product_id "
+				+ "LEFT JOIN product_prices hxProductPrices on p.id = hxProductPrices.product_id "
 				+ "WHERE p.post_type = 'product' and pm.meta_key = '_stock_status' and pm2.meta_key = '_price'";
 
-		List<ProductFull> productos = jdbc.query(query, new RowMapper<ProductFull>() {
+		List<ProductDetail> productos = jdbc.query(query, new RowMapper<ProductDetail>() {
 			@Override
-			public ProductFull mapRow(ResultSet rs, int rowNum) throws SQLException {
-				ProductFull product = new ProductFull();
+			public ProductDetail mapRow(ResultSet rs, int rowNum) throws SQLException {
+				ProductDetail product = new ProductDetail();
 				product.setId(rs.getInt(Fields.ID));
 				product.setTitle(rs.getString(Fields.TITLE));
-				//product.setStock(rs.getString(Fields.STOCK));// este campo no se va a usar por el momento
-				product.setDbCoins(rs.getString(Fields.DBCOINS));
+				// product.setStock(rs.getString(Fields.STOCK));// este campo no se va a usar
+				// por el momento
+				product.setWooCoins(rs.getString(Fields.WOO_COINS));
 				product.setVisible(rs.getBoolean(Fields.VISIBLE));// si el campo es visible se asume que hay stock
-				product.setCsvCoins(rs.getString(Fields.CSVCOINS));
-				product.setCsvUsd(rs.getString(Fields.CSVUSD));
-				product.setCsvCurrency(rs.getString(Fields.CSVCURRENCY));
-				product.setCsvCurrencyType(rs.getString(Fields.CSVCURRENCYTYPE));
+				product.setHxCoins(rs.getString(Fields.HX_COINS));
+				product.setHxUsd(rs.getString(Fields.HX_USD));
+				product.setHxCurrency(rs.getString(Fields.HX_CURRENCY));
+				product.setHxCurrencyType(rs.getString(Fields.HX_CURRENCYTYPE));
 
 				return product;
 			}
@@ -429,79 +456,79 @@ public class DBRepository {
 
 		return productos;
 	}
-	
-	public void updateProductPrices(CsvProduct product) {
-		String update = "update product_prices set "
-		+ "`product_name` = '" + product.getTitle() + "', `coins` = '" + product.getDbCoins() + "', "
-		+ " `price` = '" + product.getCsvUsd() + "', `currency` = '" + product.getCsvCurrency() + "', "
-		+ "`currency_type` = '" + product.getCsvCurrencyType() 
-		+ "' where `product_id` = " + product.getId();
+
+	public void updateProductPrices(ProductDetailWithAction product) {
+		String update = "update product_prices set " + "`product_name` = '" + product.getTitle() + "', `coins` = '"
+				+ product.getWooCoins() + "', " + " `price` = '" + product.getHxUsd() + "', `currency` = '"
+				+ product.getHxCurrency() + "', " + "`currency_type` = '" + product.getHxCurrencyType()
+				+ "' where `product_id` = " + product.getId();
 		System.out.println(update);
 		int rowsUpdated = jdbc.update(update);
 		System.out.println("se actualizaron " + rowsUpdated + " filas en product_prices!");
-		
+
 	}
-	
-	public void insertProductPrices(CsvProduct product) {
-		String insert = "insert into product_prices (`product_id`, `product_name`, `coins` ,  `price` ,	`currency` " + 
-				" ,	`currency_type`) values (" + product.getId() + ", '" + product.getTitle() + "', '" + product.getDbCoins() + 
-				"', '" + product.getCsvUsd() + "', '" + product.getCsvCurrency() + "', '" + product.getCsvCurrencyType() + "')";
+
+	public void insertProductPrices(ProductDetailWithAction product) {
+		String insert = "insert into product_prices (`product_id`, `product_name`, `coins` ,  `price` ,	`currency` "
+				+ " ,	`currency_type`) values (" + product.getId() + ", '" + product.getTitle() + "', '"
+				+ product.getWooCoins() + "', '" + product.getHxUsd() + "', '" + product.getHxCurrency() + "', '"
+				+ product.getHxCurrencyType() + "')";
 		System.out.println(insert);
 		int rowsInserted = jdbc.update(insert);
 		System.out.println("se insertaron " + rowsInserted + " filas en product_prices!");
 	}
-	
-	public Integer insertPost (CsvProduct product) {
+
+	public Integer insertPost(ProductDetailWithAction product) {
 		String now = Utils.getNowLocalDateTimeString();
 		String titulo = product.getTitle();
-		
+
 		String insertPost = "INSERT INTO `wp_posts` (`post_author`, `post_date`, `post_date_gmt`, `post_content`, `post_title`, "
-		+ "`post_excerpt`, `post_status`, `comment_status`, `ping_status`, `post_password`, `post_name`, `to_ping`, `pinged`, "
-		+ "`post_modified`, `post_modified_gmt`, `post_content_filtered`, `post_parent`, `guid`, `menu_order`, `post_type`, "
-		+ " `post_mime_type`, `comment_count`) VALUES (1, '" + now + "', '" + now + "', '" + titulo + "', '" + titulo + "', "
-		+ "'" + titulo + "', 'publish', 'open', 'closed', '', '" + titulo.replace(" ", "-") + "', '', '', '" + now + "', '" + now
-		+ "', '', 0, " + "'', 0, 'product', '', 0)";
+				+ "`post_excerpt`, `post_status`, `comment_status`, `ping_status`, `post_password`, `post_name`, `to_ping`, `pinged`, "
+				+ "`post_modified`, `post_modified_gmt`, `post_content_filtered`, `post_parent`, `guid`, `menu_order`, `post_type`, "
+				+ " `post_mime_type`, `comment_count`) VALUES (1, '" + now + "', '" + now + "', '" + titulo + "', '"
+				+ titulo + "', " + "'" + titulo + "', 'publish', 'open', 'closed', '', '" + titulo.replace(" ", "-")
+				+ "', '', '', '" + now + "', '" + now + "', '', 0, " + "'', 0, 'product', '', 0)";
 		System.out.println(insertPost);
 		int rowsInserted = jdbc.update(insertPost);
 		System.out.println("se insertaron " + rowsInserted + " filas en wp_posts!");
-		
+
 		return jdbc.queryForObject("SELECT LAST_INSERT_ID()", Integer.class);
 	}
 
 	public int insertPostMetadata(Integer newPostId) {
-		
+
 		String updateUrl = "UPDATE `wp_posts` SET `guid` = '" + postBasicUrl + newPostId + "' WHERE ID = " + newPostId;
 		System.out.println(updateUrl);
 		int updated = jdbc.update(updateUrl);
 		System.out.println("se actualizo la url de " + updated + " filas en wp_posts!");
-		
-		String insertRelation = "INSERT INTO `wp_term_relationships` (`object_id`, `term_taxonomy_id`, `term_order`) VALUES " + 
-				"(" + newPostId + ", 2, 0), (" + newPostId + ", 15, 0)";
+
+		String insertRelation = "INSERT INTO `wp_term_relationships` (`object_id`, `term_taxonomy_id`, `term_order`) VALUES "
+				+ "(" + newPostId + ", 2, 0), (" + newPostId + ", 15, 0)";
 		System.out.println(insertRelation);
 		int rowsInserted = jdbc.update(insertRelation);
 		System.out.println("se insertaron " + rowsInserted + " filas en wp_term_relationships!");
-		
+
 		insertWpPostMeta(newPostId);
-		
-		String update = "UPDATE `wp_term_taxonomy` TAX INNER JOIN `wp_term_taxonomy` TAX2 " + 
-				"ON TAX.`term_taxonomy_id` = TAX2.`term_taxonomy_id` AND " + 
-				"TAX.`term_id` = TAX2.`term_id` AND TAX.`taxonomy` = TAX2.`taxonomy` " + 
-				"SET TAX.`count` = TAX2.`count` + 1 " + 
-				"WHERE TAX.`term_taxonomy_id` = 2 AND TAX.`term_id` = 2 AND  TAX.`taxonomy` = 'product_type'";
+
+		String update = "UPDATE `wp_term_taxonomy` TAX INNER JOIN `wp_term_taxonomy` TAX2 "
+				+ "ON TAX.`term_taxonomy_id` = TAX2.`term_taxonomy_id` AND "
+				+ "TAX.`term_id` = TAX2.`term_id` AND TAX.`taxonomy` = TAX2.`taxonomy` "
+				+ "SET TAX.`count` = TAX2.`count` + 1 "
+				+ "WHERE TAX.`term_taxonomy_id` = 2 AND TAX.`term_id` = 2 AND  TAX.`taxonomy` = 'product_type'";
 		System.out.println(update);
 		int rowsUpdated = jdbc.update(update);
 		System.out.println("se Actualizaron " + rowsUpdated + " filas en wp_term_taxonomy !");
 
-		String updateTax = "UPDATE `wp_term_taxonomy` TAX INNER JOIN `wp_term_taxonomy` TAX2 " + 
-				"ON TAX.`term_taxonomy_id` = TAX2.`term_taxonomy_id` AND " + 
-				"TAX.`term_id` = TAX2.`term_id` AND TAX.`taxonomy` = TAX2.`taxonomy` " + 
-				"SET TAX.`count` = TAX2.`count` + 1 " + 
-				"WHERE TAX.`term_taxonomy_id` = 15 AND TAX.`term_id` = 15 AND  TAX.`taxonomy` = 'product_cat'";
+		String updateTax = "UPDATE `wp_term_taxonomy` TAX INNER JOIN `wp_term_taxonomy` TAX2 "
+				+ "ON TAX.`term_taxonomy_id` = TAX2.`term_taxonomy_id` AND "
+				+ "TAX.`term_id` = TAX2.`term_id` AND TAX.`taxonomy` = TAX2.`taxonomy` "
+				+ "SET TAX.`count` = TAX2.`count` + 1 "
+				+ "WHERE TAX.`term_taxonomy_id` = 15 AND TAX.`term_id` = 15 AND  TAX.`taxonomy` = 'product_cat'";
 		System.out.println(updateTax);
 		int taxUpdated = jdbc.update(updateTax);
 		System.out.println("se Actualizaron " + taxUpdated + " filas en wp_term_taxonomy !");
 		createStockAndVisibility(newPostId);
-		
+
 		return 0;
 	}
 
@@ -513,55 +540,59 @@ public class DBRepository {
 	}
 
 	public void deleteRelationship(Integer newId) {
-		String deleteRelation = "DELETE FROM `wp_term_relationships` WHERE `object_id` = " + newId +
-				" AND `term_taxonomy_id` = 2 ";
+		String deleteRelation = "DELETE FROM `wp_term_relationships` WHERE `object_id` = " + newId
+				+ " AND `term_taxonomy_id` = 2 ";
 		System.out.println(deleteRelation);
 		int rowsDeleted = jdbc.update(deleteRelation);
 		System.out.println("se borraron " + rowsDeleted + " filas en wp_term_relationships!");
 	}
 
 	public void restoreTaxonomyCounter() {
-		String update = "UPDATE `wp_term_taxonomy` TAX INNER JOIN `wp_term_taxonomy` TAX2 " + 
-				"ON TAX.`term_taxonomy_id` = TAX2.`term_taxonomy_id` AND " + 
-				"TAX.`term_id` = TAX2.`term_id` AND TAX.`taxonomy` = TAX2.`taxonomy` " + 
-				"SET TAX.`count` = TAX2.`count` - 1 " + 
-				"WHERE TAX.`term_taxonomy_id` = 2 AND TAX.`term_id` = 2 AND  TAX.`taxonomy` = 'product_type'";
+		String update = "UPDATE `wp_term_taxonomy` TAX INNER JOIN `wp_term_taxonomy` TAX2 "
+				+ "ON TAX.`term_taxonomy_id` = TAX2.`term_taxonomy_id` AND "
+				+ "TAX.`term_id` = TAX2.`term_id` AND TAX.`taxonomy` = TAX2.`taxonomy` "
+				+ "SET TAX.`count` = TAX2.`count` - 1 "
+				+ "WHERE TAX.`term_taxonomy_id` = 2 AND TAX.`term_id` = 2 AND  TAX.`taxonomy` = 'product_type'";
 		System.out.println(update);
 		int rowsUpdated = jdbc.update(update);
 		System.out.println("se restauro el valor de " + rowsUpdated + " filas en wp_term_taxonomy !");
 	}
 
 	public void createStockAndVisibility(Integer newId) {
-		String insert = "insert `wp_postmeta` (`meta_value`, `meta_key`, `post_id`) " +
-				"VALUES ('instock', '_stock_status', "+ newId + ")";
+		String insert = "insert `wp_postmeta` (`meta_value`, `meta_key`, `post_id`) "
+				+ "VALUES ('instock', '_stock_status', " + newId + ")";
 		System.out.println(insert);
 		int rowsInserted = jdbc.update(insert);
 		System.out.println("se creo el registro de STOCK para " + rowsInserted + " !");
-		
+
 		String updateCounter = "update `wp_termmeta` META1 INNER JOIN `wp_termmeta` META2 "
 				+ " ON META1.`term_id` = META2.`term_id` AND META1.`meta_key` = META2.`meta_key` "
 				+ " set META1.`meta_value` =  META2.`meta_value` + 1 "
 				+ " WHERE META1.`term_id` = 15 AND META1.`meta_key` = 'product_count_product_cat'";
 		System.out.println(updateCounter);
 		int rowsAffected = jdbc.update(updateCounter);
-		System.out.println("se actualizo el contador de " + rowsAffected + " filas !");		
+		System.out.println("se actualizo el contador de " + rowsAffected + " filas !");
 	}
-	
+
 	public void insertWpPostMeta(Integer postId) {
-		String update = "insert wp_postmeta (post_id, meta_key, meta_value ) values " 
-			+ "(" + postId + ", '_edit_lock','1608314587:1'), (" + postId + ", '_edit_last','1'), (" + postId + ", '_sku', null), " 
-			+ "(" + postId + ", '_regular_price','500'), (" + postId + ", '_sale_price','450'), (" + postId + ", '_sale_price_dates_from', null), " 
-			+ "(" + postId + ", '_sale_price_dates_to', null), (" + postId + ", 'total_sales','0'), (" + postId + ", '_tax_status','taxable'), " 
-			+ "(" + postId + ", '_tax_class',null), (" + postId + ", '_manage_stock','no'), (" + postId + ", '_backorders','no'), " 
-			+ "(" + postId + ", '_low_stock_amount',null), (" + postId + ", '_sold_individually','no'), (" + postId + ", '_weight',null), " 
-			+ "(" + postId + ", '_length',null), (" + postId + ", '_width',null), (" + postId + ", '_height',null), (" + postId + ", '_upsell_ids','a:0:{}'), " 
-			+ "(" + postId + ", '_crosssell_ids','a:0:{}'), (" + postId + ", '_purchase_note',null), (" + postId + ", '_default_attributes','a:0:{}'), " 
-			+ "(" + postId + ", '_virtual','no'), (" + postId + ", '_downloadable','no'), (" + postId + ", '_product_image_gallery',null), " 
-			+ "(" + postId + ", '_download_limit','-1'), (" + postId + ", '_download_expiry','-1'), (" + postId + ", '_stock',null), " 
-			+ "(" + postId + ", '_product_version','3.5.6'), (" + postId + ", '_price','450')";
+		String update = "insert wp_postmeta (post_id, meta_key, meta_value ) values " + "(" + postId
+				+ ", '_edit_lock','1608314587:1'), (" + postId + ", '_edit_last','1'), (" + postId + ", '_sku', null), "
+				+ "(" + postId + ", '_regular_price','500'), (" + postId + ", '_sale_price','450'), (" + postId
+				+ ", '_sale_price_dates_from', null), " + "(" + postId + ", '_sale_price_dates_to', null), (" + postId
+				+ ", 'total_sales','0'), (" + postId + ", '_tax_status','taxable'), " + "(" + postId
+				+ ", '_tax_class',null), (" + postId + ", '_manage_stock','no'), (" + postId + ", '_backorders','no'), "
+				+ "(" + postId + ", '_low_stock_amount',null), (" + postId + ", '_sold_individually','no'), (" + postId
+				+ ", '_weight',null), " + "(" + postId + ", '_length',null), (" + postId + ", '_width',null), ("
+				+ postId + ", '_height',null), (" + postId + ", '_upsell_ids','a:0:{}'), " + "(" + postId
+				+ ", '_crosssell_ids','a:0:{}'), (" + postId + ", '_purchase_note',null), (" + postId
+				+ ", '_default_attributes','a:0:{}'), " + "(" + postId + ", '_virtual','no'), (" + postId
+				+ ", '_downloadable','no'), (" + postId + ", '_product_image_gallery',null), " + "(" + postId
+				+ ", '_download_limit','-1'), (" + postId + ", '_download_expiry','-1'), (" + postId
+				+ ", '_stock',null), " + "(" + postId + ", '_product_version','3.5.6'), (" + postId
+				+ ", '_price','450')";
 		System.out.println(update);
 		int rowsAffected = jdbc.update(update);
-		
+
 		System.out.println("se inserto la información en postmeta para " + rowsAffected + " post !");
 	}
 }

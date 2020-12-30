@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.c1.coins.model.CsvProduct;
+import com.c1.coins.model.ProductDetailWithAction;
 import com.c1.coins.repository.DBRepository;
 import com.c1.coins.service.ProductUpdaterService;
 import com.c1.coins.utils.VisibilityEnum;
@@ -20,27 +20,27 @@ public class ProductUpdaterServiceImpl implements ProductUpdaterService {
 	private DBRepository dBRepository;
 	
 	@Transactional
-	public String updateWooCommerceDB(CsvProduct update) {
+	public String updateWooCommerceDB(ProductDetailWithAction update) {
 		if (update.getVisible()) {
 			showProduct(update.getId());
 		} else {
 			hideProduct(update.getId());
 		}
 		dBRepository.setProductName(update.getTitle(), update.getId());
-		dBRepository.setProductDbCoins(update.getDbCoins(), update.getId());
+		dBRepository.setProductDbCoins(update.getWooCoins(), update.getId());
 		dBRepository.updateProductPrices(update);
 
 		return StringUtils.EMPTY;
 	}
 	
 	@Transactional
-	public void insertPostMetadata(CsvProduct product) {
+	public void insertPostMetadata(ProductDetailWithAction product) {
 		dBRepository.insertPostMetadata(product.getId());
 		dBRepository.insertProductPrices(product);
 	}
 	
 	@Transactional
-	public Integer insertPostInWooCommerceDB(CsvProduct update) {
+	public Integer insertPostInWooCommerceDB(ProductDetailWithAction update) {
 		return dBRepository.insertPost(update);
 	}
 	

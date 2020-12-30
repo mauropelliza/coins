@@ -22,15 +22,18 @@ public class LogCanjeByUserLine {
 	}
 
 	public Double getRemaingCoins() {
+
 		// Si la linea se proceso entonces la cantidad de puntos que tenia el user es
 		// currentCoins - acumulado
 		// Si ya se proceso entonces cantidad de puntos = currentPoints + acumulado
-		int factor = "wc-processing".equals(lineOrder.getParentOrder().getStatus()) ? -1 : 1;
-		return this.parentLine.getUser().getSpentCoins() + (getAccumulatedCoins() * factor);
+		if ("wc-processing".equals(lineOrder.getParentOrder().getStatus())) {
+			return this.parentLine.getUser().getSpentCoins() - this.getAccumulatedCoins();
+		}
+		return this.getParentOrder().getUser().getSpentCoins();
 	}
 
 	public String getProduct() {
-		return lineOrder.getProduct();
+		return lineOrder.getProductName();
 	}
 
 	public Integer getQuantity() {
@@ -59,14 +62,23 @@ public class LogCanjeByUserLine {
 
 	public String validate() {
 		StringBuilder b = new StringBuilder();
-		if (Utils.isZero(this.lineOrder.getProductUsdInCatalog())) {
+		Double productPriceInCatalog = this.lineOrder.getProductUsdInCatalog();
+		if (Utils.isZero(productPriceInCatalog)) {
 			b.append("Product has no price in catalog");
-		}
-		Double coinsForOneProduct = this.getLineTotal() / this.getQuantity();
-		if (!Utils.equals(coinsForOneProduct, lineOrder.getProductCoinsInCatalog())) {
-			b.append("Coins in catalog: " + lineOrder.getProductCoinsInCatalog() + ".\nCoins in order: "
-					+ coinsForOneProduct);
+		} else {
+			Double coinsForOneProduct = this.getLineTotal() / this.getQuantity();
+			if (!Utils.equals(coinsForOneProduct, lineOrder.getProductCoinsInCatalog())) {
+				b.append("Coins in catalog: " + lineOrder.getProductCoinsInCatalog() + ".\nCoins in order: "
+						+ coinsForOneProduct);
+			}
+			Double calculatedCoinsForOneProduct = this.lineOrder.getProductCurrencyInCatalog()
+					.priceToCoins(productPriceInCatalog);
+			if (!Utils.equals(calculatedCoinsForOneProduct, lineOrder.getProductCoinsInCatalog())) {
+				b.append("Coins in catalog: " + lineOrder.getProductCoinsInCatalog() + ".\nCalculated coins: "
+						+ calculatedCoinsForOneProduct);
+			}
 		}
 		return b.toString();
 	}
+
 }

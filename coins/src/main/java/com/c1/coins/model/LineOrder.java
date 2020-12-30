@@ -9,19 +9,20 @@ import com.google.common.collect.Maps;
 @JsonIgnoreProperties(value = { "parentOrder" })
 public class LineOrder {
 
-	private String product;
+	private String productName;
 	private Integer productIdNumber;
 	private Map<String, String> meta = Maps.newHashMap();
 	private Order parentOrder;
 	private Double productCoinsInCatalog;
-	private Double productUsdInCatalog;
+	private Double productPriceInCatalog;
+	private Currency productCurrencyInCatalog = Currency.UNKNOWN;
 
-	public String getProduct() {
-		return product;
+	public String getProductName() {
+		return productName;
 	}
 
-	public void setProduct(String product) {
-		this.product = product;
+	public void setProductName(String product) {
+		this.productName = product;
 	}
 
 	public void addMeta(String key, String value) {
@@ -56,8 +57,8 @@ public class LineOrder {
 		this.productCoinsInCatalog = productCoinsInCatalog;
 	}
 
-	public void setProductUsdInCatalog(Double productUsdInCatalog) {
-		this.productUsdInCatalog = productUsdInCatalog;
+	public void setProductPriceInCatalog(Double productPriceInCatalog) {
+		this.productPriceInCatalog = productPriceInCatalog;
 	}
 	
 	
@@ -67,12 +68,16 @@ public class LineOrder {
 	}
 
 	public Double getProductUsdInCatalog() {
-		return productUsdInCatalog == null ? 0.0 : productUsdInCatalog;
+		return productPriceInCatalog == null ? 0.0 : productPriceInCatalog;
+	}
+	
+	public Currency getProductCurrencyInCatalog() {
+		return productCurrencyInCatalog;
 	}
 
 	@Override
 	public String toString() {
-		return this.getProductId() + ": " + this.product + " x " + this.getQuantity() + ". SubTotal: "
+		return this.getProductId() + ": " + this.productName + " x " + this.getQuantity() + ". SubTotal: "
 				+ getLineSubtotal() + " Total:" + getLineTotal();
 	}
 
