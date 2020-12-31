@@ -61,5 +61,9 @@ public class User {
 		return Utils.toDouble(this.meta.get("initial_points"));
 	}
 
+	public void setMetadata(Map<String, String> userMetadata) {
+		this.meta.clear();
+		this.meta.putAll(userMetadata);
+	}
 
 }

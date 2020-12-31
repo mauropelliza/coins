@@ -133,20 +133,27 @@ public class DBRepository {
 				user.setId(userId);
 				user.setDisplayName(rs.getString("display_name"));
 				user.setEmail(rs.getString("user_email"));
-				System.out.println(userId + " " + user.getDisplayName());
-				String metadataQuery = "SELECT * FROM wp_usermeta WHERE user_id =" + userId;
-				Map<String, String> userMetadata = jdbc.query(metadataQuery, new StringMapExtractor());
-
-				for (Map.Entry<String, String> entry : userMetadata.entrySet()) {
-					user.addMeta(entry.getKey(), entry.getValue());
-				}
 				users.put(user.getId(), user);
-
 				return user;
 
 			}
 		});
-		// metadatos
+		
+		String metadataQuery = "SELECT user_id, meta_key, meta_value FROM wp_usermeta WHERE user_id in " + users.keySet().toString();
+		metadataQuery = metadataQuery.replace('[', '(').replace(']', ')');
+		jdbc.query(metadataQuery, new RowMapper<Object>() {
+
+			@Override
+			public Object mapRow(ResultSet rs, int rowNumber) throws SQLException {
+				Integer userId = rs.getInt("user_id");
+				User user = users.get(userId);
+				user.addMeta(rs.getString("meta_key"), rs.getString("meta_value"));
+				return user;
+
+			}
+		});
+
+		
 
 		return userList;
 	}
