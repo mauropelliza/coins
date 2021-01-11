@@ -8,6 +8,15 @@ public class CSVLine {
 
 	private List<String> cells = Lists.newArrayList();
 
+	public CSVLine() {
+	}
+
+	public CSVLine(int identation) {
+		for (int i = 0; i < identation; i++) {
+			cells.add("");
+		}
+	}
+
 	public void add(Object value) {
 		this.cells.add("\"" + Utils.sanitize(value) + "\"");
 	}

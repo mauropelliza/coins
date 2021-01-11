@@ -22,11 +22,10 @@ import com.c1.coins.model.ProductPrice;
 import com.c1.coins.service.ProductsService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import static  com.c1.coins.utils.Fields.*;
 @RestController
 @RequestMapping(path = "/products")
 public class ProductsController {
-	private static final String ACCEPT_CSV = "text/csv";
-	private static final String ACCEPT_JSON = "application/json";
 	
 	@Autowired
 	private ProductsService productsService;

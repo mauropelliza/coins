@@ -11,4 +11,8 @@ public class Fields {
 	public final static String HX_CURRENCY = "csvCurrency";
 	public final static String HX_CURRENCYTYPE = "csvCurrencyType";
 	public final static String VISIBLE = "visible";
+	
+	public static final String ACCEPT_CSV = "text/csv";
+	public static final String ACCEPT_JSON = "application/json";
+	
 }

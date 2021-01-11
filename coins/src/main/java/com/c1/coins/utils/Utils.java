@@ -2,18 +2,18 @@ package com.c1.coins.utils;
 
 import java.io.Reader;
 import java.text.Normalizer;
-import java.text.Normalizer.Form;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 
 import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 
 public class Utils {
-
-	private static DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+	private static DateTimeFormatter TIMESTAMP_FORMATTER = new DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd HH:mm:ss").appendPattern("[.SSSSSSSSS][.SSSSSS][.SSS][.S]").toFormatter();
+	
 	private static double EPSILON = 0.001;
 
 	public static String normalize(String input) {
@@ -77,12 +77,11 @@ public class Utils {
 	}
 
 	public static LocalDateTime parseToLocalDateTime(String stringDate) {
-		return LocalDateTime.parse(stringDate, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+		return LocalDateTime.parse(stringDate, TIMESTAMP_FORMATTER);
 	}
 
 	public static String getNowLocalDateTimeString() {
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-		return LocalDateTime.now().format(formatter);
+		return LocalDateTime.now().format(TIMESTAMP_FORMATTER);
 	}
 	
 	public static CSVReader getCsvReaderUsingSeparator(Reader reader, String separator) {

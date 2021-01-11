@@ -1,22 +1,26 @@
 package com.c1.coins.service.impl;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.c1.coins.model.BuyReportProductLine;
-import com.c1.coins.model.BuyReportProductLineDetail;
+import com.c1.coins.model.BuyReportDetailLine;
+import com.c1.coins.model.BuyReportLine;
 import com.c1.coins.model.LineOrder;
 import com.c1.coins.model.LogCanjeByUser;
 import com.c1.coins.model.Order;
 import com.c1.coins.model.OrderByUserNameComparator;
 import com.c1.coins.model.User;
+import com.c1.coins.report.excel.ExcelSheet;
+import com.c1.coins.report.excel.ExcelWorkbook;
+import com.c1.coins.report.excel.buyreport.GiftCardReportExporter;
+import com.c1.coins.report.excel.buyreport.ProductReportExporter;
 import com.c1.coins.repository.DBRepository;
 import com.c1.coins.service.OrdersService;
 import com.c1.coins.utils.Utils;
@@ -51,7 +55,7 @@ public class OrdersServiceImpl implements OrdersService {
 	}
 
 	@Override
-	public List<BuyReportProductLine> createBuyReport(LocalDate startDate, LocalDate endDate, Integer orderStatus) {
+	public List<BuyReportLine> createBuyReport(LocalDate startDate, LocalDate endDate, Integer orderStatus) {
 
 		List<LineOrder> lineOrders = Lists.newArrayList();
 		List<String> orderStatusToConsider = Lists.newArrayList("wc-completed", "wc-processing");
@@ -66,6 +70,34 @@ public class OrdersServiceImpl implements OrdersService {
 		// List<LogCanjeByUser> logByUserLines = toLogOrderReportLines(lineOrders);
 
 		return toBuyOrderReportLines(lineOrders);
+	}
+	
+	@Override
+	public ExcelWorkbook createBuyReportExcel(LocalDate startDate, LocalDate endDate, Integer orderStatus) {
+		List<BuyReportLine> lines = this.createBuyReport(startDate, endDate, orderStatus);
+
+		List<BuyReportLine> giftcardLines = lines.stream()
+				.filter(line -> line.getProduct().toUpperCase().contains("GIFT CARD")).collect(Collectors.toList());
+		List<BuyReportLine> buyProductLines = Lists.newArrayList(lines);
+		buyProductLines.removeAll(giftcardLines);
+
+		if (lines.size() != buyProductLines.size() + giftcardLines.size()) {
+			throw new RuntimeException(
+					"La cantidad de lineas totales con concuerda con la suma de lineas de producto + lineas de giftcard");
+		}
+
+		StringBuilder w = new StringBuilder();
+		// Collections.sort(orders, new OrderByNameInListComparator(getNamesOrder()));
+		ExcelWorkbook book = new ExcelWorkbook();
+		ExcelSheet giftSheet = book.addSheet("Gift Cards");
+		GiftCardReportExporter giftcardExporter = new GiftCardReportExporter();
+		giftcardExporter.export(giftcardLines, giftSheet);
+		
+		ExcelSheet productsSheet = book.addSheet("Products");
+		ProductReportExporter productExporter = new ProductReportExporter();
+		productExporter.export(buyProductLines, productsSheet);
+		
+		return book;
 	}
 
 	private static List<LogCanjeByUser> toLogOrderReportLines(List<LineOrder> lineOrders) {
@@ -83,26 +115,26 @@ public class OrdersServiceImpl implements OrdersService {
 		return Lists.newArrayList(map.values());
 	}
 
-	private static List<BuyReportProductLine> toBuyOrderReportLines(List<LineOrder> lineOrders) {
-		Map<String, BuyReportProductLine> map = Maps.newLinkedHashMap();
+	private static List<BuyReportLine> toBuyOrderReportLines(List<LineOrder> lineOrders) {
+		Map<String, BuyReportLine> map = Maps.newLinkedHashMap();
 		for (LineOrder line : lineOrders) {
-			BuyReportProductLine buyOrderLine = map.get(line.getProductId());
+			BuyReportLine buyOrderLine = map.get(line.getProductId());
 			if (buyOrderLine == null) {
-				buyOrderLine = new BuyReportProductLine();
+				buyOrderLine = new BuyReportLine();
 				buyOrderLine.setProduct(line.getProductName());
 				buyOrderLine.setPrice(line.getProductUsdInCatalog());
 			}
 			buyOrderLine.addQuantity(line.getQuantity());
 
-			buyOrderLine.addRequester(new BuyReportProductLineDetail(line));
+			buyOrderLine.addRequester(new BuyReportDetailLine(line));
 			map.put(line.getProductId(), buyOrderLine);
 		}
 
-		List<BuyReportProductLine> lines = Lists.newArrayList(map.values());
-		Collections.sort(lines, new Comparator<BuyReportProductLine>() {
+		List<BuyReportLine> lines = Lists.newArrayList(map.values());
+		Collections.sort(lines, new Comparator<BuyReportLine>() {
 
 			@Override
-			public int compare(BuyReportProductLine line1, BuyReportProductLine line2) {
+			public int compare(BuyReportLine line1, BuyReportLine line2) {
 				return line1.getProduct().compareTo(line2.getProduct());
 			}
 		});

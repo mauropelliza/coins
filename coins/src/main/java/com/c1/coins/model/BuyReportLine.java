@@ -5,14 +5,14 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.c1.coins.model.Currency;
 
-public class BuyReportProductLine {
+public class BuyReportLine {
 	private Integer quantity = 0;;
 	private String product;
 	private Double price = 0.0;
 	private Currency currency;
-	private List<BuyReportProductLineDetail> requesters = Lists.newArrayList();
+	private List<BuyReportDetailLine> requesters = Lists.newArrayList();
 
-	public BuyReportProductLine() {
+	public BuyReportLine() {
 		super();
 	}
 
@@ -44,11 +44,11 @@ public class BuyReportProductLine {
 		this.price = price;
 	}
 
-	public List<BuyReportProductLineDetail> getRequesters() {
+	public List<BuyReportDetailLine> getRequesters() {
 		return requesters;
 	}
 
-	public void setRequesters(List<BuyReportProductLineDetail> requesters) {
+	public void setRequesters(List<BuyReportDetailLine> requesters) {
 		this.requesters = requesters;
 	}
 
@@ -56,7 +56,7 @@ public class BuyReportProductLine {
 		this.quantity += qty;
 	}
 
-	public void addRequester(BuyReportProductLineDetail buyReportItemRequester) {
+	public void addRequester(BuyReportDetailLine buyReportItemRequester) {
 		this.requesters.add(buyReportItemRequester);
 
 	}

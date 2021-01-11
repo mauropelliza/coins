@@ -1,11 +1,11 @@
 package com.c1.coins.model;
 
 
-public class BuyReportProductLineDetail {
+public class BuyReportDetailLine {
 	private String orderUrl;
 	private LineOrder lineOrder;
 
-	public BuyReportProductLineDetail(LineOrder lineOrder) {
+	public BuyReportDetailLine(LineOrder lineOrder) {
 		this.lineOrder = lineOrder;
 		this.orderUrl = String.format(
 				"http://hxv-creditonepuntos.hexacta.com/creditonepoints/wp-admin/post.php?post=%s&action=edit",
