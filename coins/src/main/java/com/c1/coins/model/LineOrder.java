@@ -113,4 +113,9 @@ public class LineOrder {
 		return this.errors;
 	}
 
+	public void addErrors(List<String> errors) {
+		this.errors.addAll(errors);
+
+	}
+
 }

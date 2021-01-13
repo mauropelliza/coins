@@ -1,5 +1,6 @@
 package com.c1.coins.report.excel.buyreport;
 
+import java.util.Iterator;
 import java.util.List;
 
 import com.c1.coins.model.BuyReportDetailLine;
@@ -10,7 +11,7 @@ import com.c1.coins.utils.Utils;
 import com.google.common.collect.Lists;
 
 public class ProductReportExporter {
-	private List<String> columnNames = Lists.newArrayList("Cantidad", "Producto", "Precio Convenido", 
+	private List<String> columnNames = Lists.newArrayList("Cantidad", "Producto", "Precio Convenido",
 			"Total Dolar Oficial", "Total Dolar MEP", "Total ARS");
 	private RequesterDetailLineExporter detailExporter = new RequesterDetailLineExporter();
 
@@ -36,35 +37,41 @@ public class ProductReportExporter {
 		row.createCell().setCellValue(line.getProduct());
 		row.createCell().setCellValue(line.getPrice());
 
-		String totalOficial = "";
-		String totalMep = "";
-		String totalARS = "";
+		Double totalOficial = 0.0;
+		Double totalMep = 0.0;
+		Double totalARS = 0.0;
+		List<String> errors = Lists.newArrayList();
 		switch (line.getCurrency()) {
 		case USD_OFICIAL:
-			totalOficial = line.getTotal().toString();
+			totalOficial = line.getTotal();
 			break;
 		case USD:
-			totalOficial = line.getTotal().toString();
+			totalOficial = line.getTotal();
 			break;
 		case USD_MEP:
-			totalMep = line.getTotal().toString();
+			totalMep = line.getTotal();
 			break;
 		case ARS:
-			totalARS = line.getTotal().toString();
+			totalARS = line.getTotal();
 			break;
 		case USD_REAL:
-			throw new RuntimeException("Un producto no puede estar en USD reales: " + line.getProduct());
+			errors.add("Producto en USD reales");
 		case UNKNOWN:
-			throw new RuntimeException("Un producto no puede estar con currency UNKNOWN: " + line.getProduct());
+			errors.add("Producto con moneda desconocida");
 		}
-		row.createCell().setCellValue(totalOficial);
 		row.createCell().setCellValue(totalOficial);
 		row.createCell().setCellValue(totalMep);
 		row.createCell().setCellValue(totalARS);
-		for (BuyReportDetailLine detail : line.getRequesters()) {
-			detailExporter.use(row).export(detail);
+		Iterator<BuyReportDetailLine> i = line.getRequesters().iterator();
+		BuyReportDetailLine detail = i.next();
+		detail.addErrors(errors);
+		detailExporter.use(row).export(detail);
+		while (i.hasNext()) {
+			detail = i.next();
+			detail.addErrors(errors);
 			row = row.getParentSheet().createRow();
 			row.createEmptyCells(columnNames.size());
+			detailExporter.use(row).export(detail);
 		}
 	}
 

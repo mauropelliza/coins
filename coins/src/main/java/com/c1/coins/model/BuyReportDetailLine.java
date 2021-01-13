@@ -1,5 +1,6 @@
 package com.c1.coins.model;
 
+import java.util.List;
 
 public class BuyReportDetailLine {
 	private String orderUrl;
@@ -31,6 +32,11 @@ public class BuyReportDetailLine {
 	
 	public String getErrors() {
 		return String.join("\n", this.lineOrder.getErrors());
+	}
+
+	public void addErrors(List<String> errors) {
+		this.lineOrder.addErrors(errors);
+		
 	}
 
 }
