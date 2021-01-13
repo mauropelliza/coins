@@ -1,7 +1,7 @@
 package com.c1.coins.model;
 
 public class ProductPrice {
-	private Integer id;
+	private Integer productId;
 	private String title;
 	private Double price;
 	private Double coins;
@@ -12,12 +12,12 @@ public class ProductPrice {
 
 	}
 
-	public Integer getId() {
-		return id;
+	public Integer getProductId() {
+		return productId;
 	}
 
-	public void setId(Integer id) {
-		this.id = id;
+	public void setProductId(Integer id) {
+		this.productId = id;
 	}
 
 	public String getTitle() {

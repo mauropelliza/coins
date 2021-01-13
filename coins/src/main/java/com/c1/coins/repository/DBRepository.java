@@ -20,6 +20,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
 import com.c1.coins.model.Category;
+import com.c1.coins.model.Currency;
 import com.c1.coins.model.ProductDetailWithAction;
 import com.c1.coins.model.LineOrder;
 import com.c1.coins.model.Order;
@@ -89,10 +90,8 @@ public class DBRepository {
 
 			@Override
 			public Order extractData(ResultSet rs) throws SQLException, DataAccessException {
+				rs.next();
 				Order o = new Order();
-				if (!rs.next())
-					return o;
-
 				o.setId(rs.getInt("ID"));
 				String stringDate = rs.getString("post_date");
 				o.setDate(Utils.parseToLocalDateTime(stringDate));
@@ -138,8 +137,9 @@ public class DBRepository {
 
 			}
 		});
-		
-		String metadataQuery = "SELECT user_id, meta_key, meta_value FROM wp_usermeta WHERE user_id in " + users.keySet().toString();
+
+		String metadataQuery = "SELECT user_id, meta_key, meta_value FROM wp_usermeta WHERE user_id in "
+				+ users.keySet().toString();
 		metadataQuery = metadataQuery.replace('[', '(').replace(']', ')');
 		jdbc.query(metadataQuery, new RowMapper<Object>() {
 
@@ -152,8 +152,6 @@ public class DBRepository {
 
 			}
 		});
-
-		
 
 		return userList;
 	}
@@ -212,22 +210,24 @@ public class DBRepository {
 
 		String wcQuery = "SELECT order_id, order_item_id, order_item_name FROM wp_woocommerce_order_items WHERE order_id="
 				+ orderId;
+		System.out.println(wcQuery);
 		List<LineOrder> lines = jdbc.query(wcQuery, new RowMapper<LineOrder>() {
 			@Override
 			public LineOrder mapRow(ResultSet rs, int rowNum) throws SQLException {
 				LineOrder line = new LineOrder();
+				line.setId(rs.getInt("order_item_id"));
 				line.setProductName(rs.getString("order_item_name"));
-				line.setProductIdNumber(Integer.getInteger(rs.getString("order_item_id")));
+				line.setLineOrderId(rs.getInt("order_item_id"));
 				return line;
 			}
 		});
 
 		for (LineOrder line : lines) {
-			if (line.getProductIdNumber() == null) {
-				System.out.println(line.getProductName() + " no tiene id de producto, no se puede obtener metadata");
+			if (line.getLineOrderId() == null) {
+				System.out.println(line.getProductName() + " no tiene line order id, no se puede obtener metadata");
 			} else {
 				String wcMetaQuery = "SELECT * FROM wp_woocommerce_order_itemmeta WHERE order_item_id="
-						+ line.getProductIdNumber();
+						+ line.getLineOrderId();
 				Map<String, String> lineMetadata = jdbc.query(wcMetaQuery, new StringMapExtractor());
 
 				for (Map.Entry<String, String> entry : lineMetadata.entrySet()) {
@@ -235,10 +235,22 @@ public class DBRepository {
 				}
 			}
 
-			ProductPrice productPrice = this.getProductPrices().get(line.getProductName());
+			ProductPrice productPrice = this.getProductPrices().get(line.getProductName().toUpperCase());
 			if (productPrice != null) {
-				line.setProductCoinsInCatalog(productPrice.getCoins());
-				line.setProductPriceInCatalog(productPrice.getPrice());
+				if (!productPrice.getProductId().equals(line.getProductId())) {
+					String errorMessage = String.format("%s [%s] does not match with %s [%s]", line.getProductName(),
+							line.getProductId().toString(), productPrice.getTitle(),
+							productPrice.getProductId().toString());
+					System.err.println(errorMessage);
+					line.addError(errorMessage);
+				} else {
+					line.setProductCoinsInCatalog(productPrice.getCoins());
+					line.setProductPriceInCatalog(productPrice.getPrice());
+					line.setProductCurrencyInCatalog(productPrice.getCurrency());
+				}
+			} else {
+				System.err.println("There is not dolar price for this product: " + line.getProductName());
+				line.addError("There is not dolar price for this product");
 			}
 		}
 
@@ -279,11 +291,17 @@ public class DBRepository {
 			@Override
 			public ProductPrice mapRow(ResultSet rs, int rowNum) throws SQLException {
 				ProductPrice productPrice = new ProductPrice();
-				productPrice.setId(rs.getInt("product_id"));
+				productPrice.setProductId(rs.getInt("product_id"));
 				productPrice.setTitle(rs.getString("product_name"));
 				productPrice.setPrice(rs.getDouble("price"));
-				productPrice.setPrice(rs.getDouble("coins"));
-				productPrices.put(productPrice.getTitle(), productPrice);
+				productPrice.setCoins(rs.getDouble("coins"));
+				String currencyStr = rs.getString("currency");
+				String currencyType = rs.getString("currency_type");
+				if (!Utils.isBlank(currencyType)) {
+					currencyStr = currencyStr + "_" + currencyType;
+				}
+				productPrice.setCurrency(Currency.valueOf(currencyStr));
+				productPrices.put(productPrice.getTitle().toUpperCase(), productPrice);
 				return productPrice;
 			}
 		});
@@ -425,19 +443,20 @@ public class DBRepository {
 		System.out.println("Cantidad de filas actualizadas: " + rows);
 	}
 
-	
 	/**
-	 * Obtiene todos los datos de woo y tb de la product_prices, la cual tiene el mapeo a dolares
+	 * Obtiene todos los datos de woo y tb de la product_prices, la cual tiene el
+	 * mapeo a dolares
+	 * 
 	 * @return
 	 */
 	public List<ProductDetail> getProductsDetail() {
 		String query = "SELECT DISTINCT p.id " + Fields.ID + ", p.post_title " + Fields.TITLE + ", pm.meta_value "
 				+ Fields.STOCK + ", pm2.meta_value " + Fields.WOO_COINS
 				+ ", case when (select count(1) from wp_term_relationships rel where rel.term_taxonomy_id in (6,7,9) "
-				+ "and rel.object_id = p.id) > 0 then FALSE else TRUE END AS " + Fields.VISIBLE + ", hxProductPrices.coins "
-				+ Fields.HX_COINS + ",  hxProductPrices.price " + Fields.HX_USD + ", hxProductPrices.currency " + Fields.HX_CURRENCY
-				+ ", hxProductPrices.currency_type " + Fields.HX_CURRENCYTYPE
-				+ " FROM wp_posts p LEFT JOIN wp_postmeta pm ON p.id = pm.post_id "
+				+ "and rel.object_id = p.id) > 0 then FALSE else TRUE END AS " + Fields.VISIBLE
+				+ ", hxProductPrices.coins " + Fields.HX_COINS + ",  hxProductPrices.price " + Fields.HX_USD
+				+ ", hxProductPrices.currency " + Fields.HX_CURRENCY + ", hxProductPrices.currency_type "
+				+ Fields.HX_CURRENCYTYPE + " FROM wp_posts p LEFT JOIN wp_postmeta pm ON p.id = pm.post_id "
 				+ "LEFT JOIN wp_postmeta pm2 ON p.id = pm2.post_id "
 				+ "LEFT JOIN product_prices hxProductPrices on p.id = hxProductPrices.product_id "
 				+ "WHERE p.post_type = 'product' and pm.meta_key = '_stock_status' and pm2.meta_key = '_price'";

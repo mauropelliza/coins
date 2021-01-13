@@ -1,6 +1,9 @@
 package com.c1.coins.model;
 
+import java.util.List;
 import java.util.Map;
+
+import org.assertj.core.util.Lists;
 
 import com.c1.coins.utils.Utils;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -9,13 +12,24 @@ import com.google.common.collect.Maps;
 @JsonIgnoreProperties(value = { "parentOrder" })
 public class LineOrder {
 
+	private Integer id;
 	private String productName;
-	private Integer productIdNumber;
+	private Integer lineOrderId;
 	private Map<String, String> meta = Maps.newHashMap();
 	private Order parentOrder;
 	private Double productCoinsInCatalog;
 	private Double productPriceInCatalog;
 	private Currency productCurrencyInCatalog = Currency.UNKNOWN;
+
+	private List<String> errors = Lists.newArrayList();
+
+	public Integer getId() {
+		return id;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
 	public String getProductName() {
 		return productName;
@@ -41,8 +55,8 @@ public class LineOrder {
 		return Utils.toDouble((this.meta.get("_line_subtotal")));
 	}
 
-	public String getProductId() {
-		return this.meta.get("_product_id");
+	public Integer getProductId() {
+		return Utils.toInteger(this.meta.get("_product_id"));
 	}
 
 	public Order getParentOrder() {
@@ -60,8 +74,6 @@ public class LineOrder {
 	public void setProductPriceInCatalog(Double productPriceInCatalog) {
 		this.productPriceInCatalog = productPriceInCatalog;
 	}
-	
-	
 
 	public Double getProductCoinsInCatalog() {
 		return productCoinsInCatalog == null ? 0.0 : productCoinsInCatalog;
@@ -70,9 +82,13 @@ public class LineOrder {
 	public Double getProductUsdInCatalog() {
 		return productPriceInCatalog == null ? 0.0 : productPriceInCatalog;
 	}
-	
+
 	public Currency getProductCurrencyInCatalog() {
 		return productCurrencyInCatalog;
+	}
+
+	public void setProductCurrencyInCatalog(Currency productCurrencyInCatalog) {
+		this.productCurrencyInCatalog = productCurrencyInCatalog;
 	}
 
 	@Override
@@ -81,12 +97,20 @@ public class LineOrder {
 				+ getLineSubtotal() + " Total:" + getLineTotal();
 	}
 
-	public Integer getProductIdNumber() {
-		return productIdNumber;
+	public Integer getLineOrderId() {
+		return lineOrderId;
 	}
 
-	public void setProductIdNumber(Integer productIdNumber) {
-		this.productIdNumber = productIdNumber;
+	public void setLineOrderId(Integer lineOrderId) {
+		this.lineOrderId = lineOrderId;
+	}
+
+	public void addError(String error) {
+		this.errors.add(error);
+	}
+
+	public List<String> getErrors() {
+		return this.errors;
 	}
 
 }

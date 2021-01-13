@@ -1,5 +1,7 @@
 package com.c1.coins.report.excel;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.Map;
 
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -20,6 +22,16 @@ public class ExcelWorkbook {
 
 	public ExcelSheet getSheet(String name) {
 		return sheets.get(name);
+	}
+
+	public byte[] toBytes() {
+		ByteArrayOutputStream stream = new ByteArrayOutputStream();
+		try {
+			this.excelWorkbook.write(stream);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		return stream.toByteArray();
 	}
 
 }

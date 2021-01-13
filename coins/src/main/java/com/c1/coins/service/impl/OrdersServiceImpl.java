@@ -116,13 +116,14 @@ public class OrdersServiceImpl implements OrdersService {
 	}
 
 	private static List<BuyReportLine> toBuyOrderReportLines(List<LineOrder> lineOrders) {
-		Map<String, BuyReportLine> map = Maps.newLinkedHashMap();
+		Map<Integer, BuyReportLine> map = Maps.newLinkedHashMap();
 		for (LineOrder line : lineOrders) {
 			BuyReportLine buyOrderLine = map.get(line.getProductId());
 			if (buyOrderLine == null) {
 				buyOrderLine = new BuyReportLine();
 				buyOrderLine.setProduct(line.getProductName());
 				buyOrderLine.setPrice(line.getProductUsdInCatalog());
+				buyOrderLine.setCurrency(line.getProductCurrencyInCatalog());
 			}
 			buyOrderLine.addQuantity(line.getQuantity());
 

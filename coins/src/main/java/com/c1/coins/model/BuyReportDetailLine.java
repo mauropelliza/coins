@@ -28,5 +28,9 @@ public class BuyReportDetailLine {
 	public Order getOrder() {
 		return this.lineOrder.getParentOrder();
 	}
+	
+	public String getErrors() {
+		return String.join("\n", this.lineOrder.getErrors());
+	}
 
 }

@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.c1.coins.csv.ProductToCsvSerializer;
+import com.c1.coins.csv.ResultsToCsvSerializer;
 import com.c1.coins.model.Product;
 import com.c1.coins.model.ProductDetail;
 import com.c1.coins.model.ProductDetailWithAction;

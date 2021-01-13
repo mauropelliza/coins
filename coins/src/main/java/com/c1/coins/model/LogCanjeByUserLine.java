@@ -48,7 +48,7 @@ public class LogCanjeByUserLine {
 		return lineOrder.getLineSubtotal();
 	}
 
-	public String getProductId() {
+	public Integer getProductId() {
 		return lineOrder.getProductId();
 	}
 

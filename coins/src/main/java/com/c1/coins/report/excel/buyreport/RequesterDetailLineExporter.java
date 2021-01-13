@@ -10,21 +10,18 @@ import com.google.common.collect.Lists;
 
 public class RequesterDetailLineExporter {
 	public static final List<String> columns = Collections.unmodifiableList(Lists.newArrayList("Beneficiario", "Orden",
-			"Oficina", "Cantidad", "Email facturacion", "Estado de Orden en Woo"));
-	
+			"Oficina", "Cantidad", "Email facturacion", "Estado de Orden en Woo", "Errores"));
+
 	private ExcelRow row;
 
-	protected int identation;
-
-
-	public RequesterDetailLineExporter(int identation) {
-		this.identation = identation;
+	public RequesterDetailLineExporter() {
 	}
 
-	public List<String> getHeaderColumns() {
-		return columns;
+	public void createExcelHeader(ExcelRow header) {
+		for (int i = 0; i < columns.size(); i++) {
+			header.createCell().setCellValue(columns.get(i));
+		}
 	}
-
 
 	public RequesterDetailLineExporter use(ExcelRow row) {
 		this.row = row;
@@ -32,14 +29,6 @@ public class RequesterDetailLineExporter {
 	}
 
 	public ExcelRow export(BuyReportDetailLine line) {
-		this.export(line, true);
-		return row;
-	}
-
-	public ExcelRow export(BuyReportDetailLine line, boolean applyIdentation) {
-		if (applyIdentation) {
-			row.createEmptyCells(identation);
-		}
 		User user = line.getUser();
 		row.createCell().setCellValue(user.getDisplayName());
 		row.createCell().setCellValue(line.getOrderUrl());
@@ -47,17 +36,7 @@ public class RequesterDetailLineExporter {
 		row.createCell().setCellValue(line.getQuantity());
 		row.createCell().setCellValue(user.getBillingEmail());
 		row.createCell().setCellValue(line.getOrder().getStatus());
+		row.createCell().setCellValue(line.getErrors());
 		return row;
 	}
-
-	public void createExcelHeader() {
-		row.createEmptyCells(identation);
-		row.createCell().setCellValue(columns.get(0));
-		row.createCell().setCellValue(columns.get(1));
-		row.createCell().setCellValue(columns.get(2));
-		row.createCell().setCellValue(columns.get(3));
-		row.createCell().setCellValue(columns.get(4));
-		row.createCell().setCellValue(columns.get(5));
-	}
-
 }
