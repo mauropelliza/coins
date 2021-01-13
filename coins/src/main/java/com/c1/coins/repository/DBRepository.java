@@ -65,7 +65,7 @@ public class DBRepository {
 		List<Order> result = Lists.newArrayList();
 		String queryOrder = orderStatus == null || orderStatus == 0 ? "desc" : "asc";
 		String query = String.format(
-				"SELECT ID FROM wp_posts p WHERE p.post_type = 'shop_order' and post_date>='%s' and post_date<='%s' ORDER BY post_date "
+				"SELECT ID FROM wp_posts p WHERE p.post_type = 'shop_order' and post_date>='%s' and post_date<='%s' and post_status in ('wc-completed', 'wc-processing') ORDER BY post_date "
 						+ queryOrder,
 				Utils.getDBDateString(startDate, true), Utils.getDBDateString(endDate, false));
 		System.out.println(query);
@@ -85,7 +85,7 @@ public class DBRepository {
 	}
 
 	public Order getOrderById(Integer id) {
-		String query = "SELECT * FROM wp_posts p WHERE p.ID = " + id;
+		String query = "select ID, post_Date, post_status FROM wp_posts p WHERE p.ID = " + id;
 		Order order = jdbc.query(query, new ResultSetExtractor<Order>() {
 
 			@Override

@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.c1.coins.model.BuyReportLine;
+import com.c1.coins.model.LineOrder;
 import com.c1.coins.model.Order;
 import com.c1.coins.report.excel.ExcelWorkbook;
 import com.c1.coins.service.OrdersService;
@@ -30,29 +30,21 @@ public class OrdersController {
 	@Autowired
 	private OrdersService ordersService;
 
-	@GetMapping
-	public List<Order> createYearReport(
-			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-			@RequestParam(required = false) Integer orderStatus) {
-		return ordersService.createYearReport(startDate, endDate, orderStatus);
-	}
-
 	@GetMapping(path = "/{orderId}")
 	public Order getOrderById(@PathVariable Integer orderId) {
 		return ordersService.getOrderById(orderId);
 	}
 
-	@GetMapping(path = "/buy-report")
-	public List<BuyReportLine> createBuyReport(HttpServletResponse response,
+	@GetMapping(path = "/line-orders")
+	public List<LineOrder> createBuyReport(HttpServletResponse response,
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
 			@RequestParam(required = false) Integer orderStatus) throws IOException {
-		List<BuyReportLine> lines = ordersService.createBuyReport(startDate, endDate, orderStatus);
+		List<LineOrder> lines = ordersService.getLineOrders(startDate, endDate, orderStatus);
 		return lines;
 	}
 
-	@GetMapping(path = "/buy-report/xlsx", produces = MediaType.TEXT_PLAIN_VALUE)
+	@GetMapping(path = "/buy-report", produces = MediaType.TEXT_PLAIN_VALUE)
 	public ResponseEntity<Resource> createBuyReportExcel(
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,

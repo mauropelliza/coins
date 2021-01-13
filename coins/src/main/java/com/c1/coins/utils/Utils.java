@@ -12,7 +12,8 @@ import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 
 public class Utils {
-	private static DateTimeFormatter TIMESTAMP_FORMATTER = new DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd HH:mm:ss").appendPattern("[.SSSSSSSSS][.SSSSSS][.SSS][.S]").toFormatter();
+	public static DateTimeFormatter TIMESTAMP_FORMATTER = new DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd HH:mm:ss").appendPattern("[.SSSSSSSSS][.SSSSSS][.SSS][.S]").toFormatter();
+	public static DateTimeFormatter DATE_FORMATTER = new DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd").toFormatter();
 	
 	private static double EPSILON = 0.001;
 

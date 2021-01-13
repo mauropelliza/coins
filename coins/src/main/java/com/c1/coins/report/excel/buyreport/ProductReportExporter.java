@@ -7,7 +7,6 @@ import com.c1.coins.model.BuyReportDetailLine;
 import com.c1.coins.model.BuyReportLine;
 import com.c1.coins.report.excel.ExcelRow;
 import com.c1.coins.report.excel.ExcelSheet;
-import com.c1.coins.utils.Utils;
 import com.google.common.collect.Lists;
 
 public class ProductReportExporter {

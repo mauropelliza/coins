@@ -20,6 +20,7 @@ import com.c1.coins.model.User;
 import com.c1.coins.report.excel.ExcelSheet;
 import com.c1.coins.report.excel.ExcelWorkbook;
 import com.c1.coins.report.excel.buyreport.GiftCardReportExporter;
+import com.c1.coins.report.excel.buyreport.LineOrderReportExporter;
 import com.c1.coins.report.excel.buyreport.ProductReportExporter;
 import com.c1.coins.repository.DBRepository;
 import com.c1.coins.service.OrdersService;
@@ -55,7 +56,7 @@ public class OrdersServiceImpl implements OrdersService {
 	}
 
 	@Override
-	public List<BuyReportLine> createBuyReport(LocalDate startDate, LocalDate endDate, Integer orderStatus) {
+	public List<LineOrder> getLineOrders(LocalDate startDate, LocalDate endDate, Integer orderStatus) {
 
 		List<LineOrder> lineOrders = Lists.newArrayList();
 		List<String> orderStatusToConsider = Lists.newArrayList("wc-completed", "wc-processing");
@@ -66,16 +67,13 @@ public class OrdersServiceImpl implements OrdersService {
 			}
 		});
 		lineOrders.sort(new OrderByUserNameComparator());
-
-		// List<LogCanjeByUser> logByUserLines = toLogOrderReportLines(lineOrders);
-
-		return toBuyOrderReportLines(lineOrders);
+		return lineOrders;
 	}
 	
 	@Override
 	public ExcelWorkbook createBuyReportExcel(LocalDate startDate, LocalDate endDate, Integer orderStatus) {
-		List<BuyReportLine> lines = this.createBuyReport(startDate, endDate, orderStatus);
-
+		List<LineOrder> lineOrders = this.getLineOrders(startDate, endDate, orderStatus);
+		List<BuyReportLine> lines = toBuyOrderReportLines(lineOrders);
 		List<BuyReportLine> giftcardLines = lines.stream()
 				.filter(line -> line.getProduct().toUpperCase().contains("GIFT CARD")).collect(Collectors.toList());
 		List<BuyReportLine> buyProductLines = Lists.newArrayList(lines);
@@ -89,6 +87,10 @@ public class OrdersServiceImpl implements OrdersService {
 		StringBuilder w = new StringBuilder();
 		// Collections.sort(orders, new OrderByNameInListComparator(getNamesOrder()));
 		ExcelWorkbook book = new ExcelWorkbook();
+		ExcelSheet ordersSheet = book.addSheet("Ordenes");
+		LineOrderReportExporter lineOrderExporter = new LineOrderReportExporter();
+		lineOrderExporter.export(lineOrders, ordersSheet);
+		
 		ExcelSheet giftSheet = book.addSheet("Gift Cards");
 		GiftCardReportExporter giftcardExporter = new GiftCardReportExporter();
 		giftcardExporter.export(giftcardLines, giftSheet);
