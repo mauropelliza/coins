@@ -117,7 +117,7 @@ public class ProductsServiceImpl implements ProductsService {
 		List<ProductDetail> dbList = dBRepository.getProductsDetail();
 		Map<String, Product> map = null;
 		try {
-			map = dBRepository.loadProductsFromFile(new File("./nuevos_ingresos.csv"));
+			map = dBRepository.loadProductsFromFile(new File("./nuevos_precios.csv"));
 		} catch (IOException e) {
 			throw new RuntimeException();
 		}

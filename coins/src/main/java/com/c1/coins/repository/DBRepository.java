@@ -68,7 +68,6 @@ public class DBRepository {
 				"SELECT ID FROM wp_posts p WHERE p.post_type = 'shop_order' and post_date>='%s' and post_date<='%s' and post_status in ('wc-completed', 'wc-processing') ORDER BY post_date "
 						+ queryOrder,
 				Utils.getDBDateString(startDate, true), Utils.getDBDateString(endDate, false));
-		System.out.println(query);
 
 		List<Integer> idList = jdbc.queryForList(query, Integer.class);
 
@@ -210,7 +209,6 @@ public class DBRepository {
 
 		String wcQuery = "SELECT order_id, order_item_id, order_item_name FROM wp_woocommerce_order_items WHERE order_id="
 				+ orderId;
-		System.out.println(wcQuery);
 		List<LineOrder> lines = jdbc.query(wcQuery, new RowMapper<LineOrder>() {
 			@Override
 			public LineOrder mapRow(ResultSet rs, int rowNum) throws SQLException {
@@ -224,7 +222,8 @@ public class DBRepository {
 
 		for (LineOrder line : lines) {
 			if (line.getLineOrderId() == null) {
-				System.out.println(line.getProductName() + " no tiene line order id, no se puede obtener metadata");
+				String error = line.getProductName() + " no tiene line order id, no se puede obtener metadata";
+				line.addError(error);
 			} else {
 				String wcMetaQuery = "SELECT * FROM wp_woocommerce_order_itemmeta WHERE order_item_id="
 						+ line.getLineOrderId();
@@ -241,7 +240,6 @@ public class DBRepository {
 					String errorMessage = String.format("%s [%s] does not match with %s [%s]", line.getProductName(),
 							line.getProductId().toString(), productPrice.getTitle(),
 							productPrice.getProductId().toString());
-					System.err.println(errorMessage);
 					line.addError(errorMessage);
 				} else {
 					line.setProductCoinsInCatalog(productPrice.getCoins());
@@ -249,7 +247,6 @@ public class DBRepository {
 					line.setProductCurrencyInCatalog(productPrice.getCurrency());
 				}
 			} else {
-				System.err.println("There is not dolar price for this product: " + line.getProductName());
 				line.addError("There is not dolar price for this product");
 			}
 		}
