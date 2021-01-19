@@ -9,8 +9,8 @@ import com.c1.coins.utils.Utils;
 import com.google.common.collect.Lists;
 
 public class LineOrderReportExporter {
-	private List<String> columnNames = Lists.newArrayList("Orden", "lineaId", "Fecha", "User", "Producto", "Coins",
-			"Cantidad", "Total", "Coins en Catalogo", "USD en Catalogo", "Tipo Moneda", "Errores");
+	private List<String> columnNames = Lists.newArrayList("Orden", "lineaId", "Fecha", "User", "Producto",
+			"Coins por unidad", "Cantidad", "Total", "Coins en Catalogo", "USD en Catalogo", "Tipo Moneda", "Errores");
 
 	public void createExcelHeader(ExcelRow header) {
 		for (int i = 0; i < columnNames.size(); i++) {
@@ -34,17 +34,13 @@ public class LineOrderReportExporter {
 		row.createCell().setCellValue(line.getParentOrder().getTimeStamp().format(Utils.DATE_FORMATTER));
 		row.createCell().setCellValue(line.getParentOrder().getUserName());
 		row.createCell().setCellValue(line.getProductName());
-		Double coinsPerUnit = line.getLineTotal() / line.getQuantity();
-		row.createCell().setCellValue(coinsPerUnit);
+		row.createCell().setCellValue(line.getProductCoins());
 		row.createCell().setCellValue(line.getQuantity());
-		row.createCell().setCellValue(line.getLineTotal());
+		row.createCell().setCellValue(line.getTotalCoins());
 		row.createCell().setCellValue(line.getProductCoinsInCatalog());
 		row.createCell().setCellValue(line.getProductUsdInCatalog());
 		row.createCell().setCellValue(line.getProductCurrencyInCatalog().toString());
-		if (!Utils.equals(coinsPerUnit, line.getProductCoinsInCatalog())) {
-			line.addError(String.format("El precio de catalogo (%s) no coincide con el de woocomerce (%s)", line.getProductCoinsInCatalog().toString(), coinsPerUnit.toString()));
-			row.createCell().setCellValue(String.join("\n", line.getErrors()));
-		}
+		row.createCell().setCellValue(String.join("\n", line.getErrors()));
 	}
 
 }

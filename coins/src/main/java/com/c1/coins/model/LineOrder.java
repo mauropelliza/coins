@@ -15,7 +15,7 @@ public class LineOrder {
 	private Integer id;
 	private String productName;
 	private Integer lineOrderId;
-	private Map<String, String> meta = Maps.newHashMap();
+	private Map<String, String> meta = Maps.newLinkedHashMap();
 	private Order parentOrder;
 	private Double productCoinsInCatalog;
 	private Double productPriceInCatalog;
@@ -39,20 +39,40 @@ public class LineOrder {
 		this.productName = product;
 	}
 
-	public void addMeta(String key, String value) {
-		this.meta.put(key, value);
+	public void setMetas(Map<String, String> metas) {
+		this.meta.clear();
+		this.meta.putAll(metas);
+	}
+
+	public void validate() {
+		if (this.getProductUsdInCatalog() == null) {
+			this.addError("There is not dolar price for this product in the catalog");
+		}
+		if (this.getProductCoinsInCatalog() == null) {
+			this.addError("There is not coins value for this product in the catalog");
+		}
+		if (this.getProductCurrencyInCatalog() == null) {
+			this.addError("There is not a currency assigned to this product in the catalog");
+		}
+		Double productCoinsInCatalog = this.getProductCoinsInCatalog();
+		productCoinsInCatalog = productCoinsInCatalog == null ? 0.0 : productCoinsInCatalog;
+		if (!Utils.equals(productCoinsInCatalog, this.getProductCoins())) {
+			this.addError(String.format("Price mismatch. Product name: %s. Id: %s. Catalog: %s.  Line: %s",
+					this.getProductName(), this.getProductId(), this.getProductCoinsInCatalog(),
+					this.getProductCoins()));
+		}
 	}
 
 	public Integer getQuantity() {
 		return Utils.toInteger(this.meta.get("_qty"));
 	}
 
-	public Double getLineTotal() {
-		return Utils.toDouble(this.meta.get("_line_total"));
+	public Double getProductCoins() {
+		return getTotalCoins() / getQuantity();
 	}
 
-	public Double getLineSubtotal() {
-		return Utils.toDouble((this.meta.get("_line_subtotal")));
+	public Double getTotalCoins() {
+		return Utils.toDouble(this.meta.get("_line_total"));
 	}
 
 	public Integer getProductId() {
@@ -93,8 +113,8 @@ public class LineOrder {
 
 	@Override
 	public String toString() {
-		return this.getProductId() + ": " + this.productName + " x " + this.getQuantity() + ". SubTotal: "
-				+ getLineSubtotal() + " Total:" + getLineTotal();
+		return this.getProductId() + ": " + this.productName + " x " + this.getQuantity() + ". Product Coins: "
+				+ getProductCoins() + " Total:" + getTotalCoins();
 	}
 
 	public Integer getLineOrderId() {

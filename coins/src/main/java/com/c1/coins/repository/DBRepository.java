@@ -228,10 +228,7 @@ public class DBRepository {
 				String wcMetaQuery = "SELECT * FROM wp_woocommerce_order_itemmeta WHERE order_item_id="
 						+ line.getLineOrderId();
 				Map<String, String> lineMetadata = jdbc.query(wcMetaQuery, new StringMapExtractor());
-
-				for (Map.Entry<String, String> entry : lineMetadata.entrySet()) {
-					line.addMeta(entry.getKey(), entry.getValue());
-				}
+				line.setMetas(lineMetadata);
 			}
 
 			ProductPrice productPrice = this.getProductPrices().get(line.getProductName().toUpperCase());
@@ -246,9 +243,8 @@ public class DBRepository {
 					line.setProductPriceInCatalog(productPrice.getPrice());
 					line.setProductCurrencyInCatalog(productPrice.getCurrency());
 				}
-			} else {
-				line.addError("There is not dolar price for this product");
-			}
+			} 
+			line.validate();
 		}
 
 		return lines;

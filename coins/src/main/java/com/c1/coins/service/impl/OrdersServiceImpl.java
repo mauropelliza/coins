@@ -124,13 +124,13 @@ public class OrdersServiceImpl implements OrdersService {
 			if (buyOrderLine == null) {
 				buyOrderLine = new BuyReportLine();
 				buyOrderLine.setProduct(line.getProductName());
-				buyOrderLine.setPrice(line.getProductUsdInCatalog());
+				buyOrderLine.setProductPrice(line.getProductUsdInCatalog());
+				buyOrderLine.setProductCoins(line.getProductCoins());
 				buyOrderLine.setCurrency(line.getProductCurrencyInCatalog());
+				map.put(line.getProductId(), buyOrderLine);
 			}
 			buyOrderLine.addQuantity(line.getQuantity());
-
 			buyOrderLine.addRequester(new BuyReportDetailLine(line));
-			map.put(line.getProductId(), buyOrderLine);
 		}
 
 		List<BuyReportLine> lines = Lists.newArrayList(map.values());

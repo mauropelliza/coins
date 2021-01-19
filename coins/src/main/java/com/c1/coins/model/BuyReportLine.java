@@ -8,8 +8,9 @@ import com.c1.coins.model.Currency;
 public class BuyReportLine {
 	private Integer quantity = 0;;
 	private String product;
-	private Double price = 0.0;
+	private Double productPrice = 0.0;
 	private Currency currency;
+	private Double productCoins = 0.0;
 	private List<BuyReportDetailLine> requesters = Lists.newArrayList();
 
 	public BuyReportLine() {
@@ -32,16 +33,16 @@ public class BuyReportLine {
 		this.product = product;
 	}
 
-	public Double getPrice() {
-		return price;
+	public Double getProductPrice() {
+		return productPrice;
 	}
 
-	public Double getTotal() {
-		return price * quantity;
+	public Double getTotalPrice() {
+		return productPrice * quantity;
 	}
 
-	public void setPrice(Double price) {
-		this.price = price;
+	public void setProductPrice(Double price) {
+		this.productPrice = price;
 	}
 
 	public List<BuyReportDetailLine> getRequesters() {
@@ -68,6 +69,16 @@ public class BuyReportLine {
 	public void setCurrency(Currency currency) {
 		this.currency = currency;
 	}
+
+	public Double getProductCoins() {
+		return productCoins;
+	}
+
+	public void setProductCoins(Double coins) {
+		this.productCoins = coins;
+	}
+	
+	
 	
 	
 

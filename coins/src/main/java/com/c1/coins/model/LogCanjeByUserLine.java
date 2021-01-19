@@ -41,11 +41,7 @@ public class LogCanjeByUserLine {
 	}
 
 	public Double getLineTotal() {
-		return lineOrder.getLineTotal();
-	}
-
-	public Double getLineSubtotal() {
-		return lineOrder.getLineSubtotal();
+		return lineOrder.getTotalCoins();
 	}
 
 	public Integer getProductId() {

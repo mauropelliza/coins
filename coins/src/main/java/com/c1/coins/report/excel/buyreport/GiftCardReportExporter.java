@@ -34,8 +34,8 @@ public class GiftCardReportExporter {
 	private void export(BuyReportLine line, ExcelRow row) {
 		row.createCell().setCellValue(line.getQuantity());
 		row.createCell().setCellValue(line.getProduct());
-		row.createCell().setCellValue(line.getPrice());
-		row.createCell().setCellValue(line.getTotal());
+		row.createCell().setCellValue(line.getProductPrice());
+		row.createCell().setCellValue(line.getTotalPrice());
 		if (line.getRequesters().isEmpty()) {
 			return;
 		}

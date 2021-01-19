@@ -10,7 +10,7 @@ import com.c1.coins.report.excel.ExcelSheet;
 import com.google.common.collect.Lists;
 
 public class ProductReportExporter {
-	private List<String> columnNames = Lists.newArrayList("Cantidad", "Producto", "Precio Convenido",
+	private List<String> columnNames = Lists.newArrayList("Cantidad", "Producto", "Precio por unidad",
 			"Total Dolar Oficial", "Total Dolar MEP", "Total ARS");
 	private RequesterDetailLineExporter detailExporter = new RequesterDetailLineExporter();
 
@@ -34,7 +34,7 @@ public class ProductReportExporter {
 	private void export(BuyReportLine line, ExcelRow row) {
 		row.createCell().setCellValue(line.getQuantity());
 		row.createCell().setCellValue(line.getProduct());
-		row.createCell().setCellValue(line.getPrice());
+		row.createCell().setCellValue(line.getProductPrice());
 
 		Double totalOficial = 0.0;
 		Double totalMep = 0.0;
@@ -42,16 +42,16 @@ public class ProductReportExporter {
 		List<String> errors = Lists.newArrayList();
 		switch (line.getCurrency()) {
 		case USD_OFICIAL:
-			totalOficial = line.getTotal();
+			totalOficial = line.getTotalPrice();
 			break;
 		case USD:
-			totalOficial = line.getTotal();
+			totalOficial = line.getTotalPrice();
 			break;
 		case USD_MEP:
-			totalMep = line.getTotal();
+			totalMep = line.getTotalPrice();
 			break;
 		case ARS:
-			totalARS = line.getTotal();
+			totalARS = line.getTotalPrice();
 			break;
 		case USD_REAL:
 			errors.add("Producto en USD reales");
