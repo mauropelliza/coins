@@ -58,21 +58,10 @@ public class LogCanjeByUserLine {
 
 	public String validate() {
 		StringBuilder b = new StringBuilder();
-		Double productPriceInCatalog = this.lineOrder.getProductUsdInCatalog();
-		if (Utils.isZero(productPriceInCatalog)) {
-			b.append("Product has no price in catalog");
-		} else {
-			Double coinsForOneProduct = this.getLineTotal() / this.getQuantity();
-			if (!Utils.equals(coinsForOneProduct, lineOrder.getProductCoinsInCatalog())) {
-				b.append("Coins in catalog: " + lineOrder.getProductCoinsInCatalog() + ".\nCoins in order: "
-						+ coinsForOneProduct);
-			}
-			Double calculatedCoinsForOneProduct = this.lineOrder.getProductCurrencyInCatalog()
-					.priceToCoins(productPriceInCatalog);
-			if (!Utils.equals(calculatedCoinsForOneProduct, lineOrder.getProductCoinsInCatalog())) {
-				b.append("Coins in catalog: " + lineOrder.getProductCoinsInCatalog() + ".\nCalculated coins: "
-						+ calculatedCoinsForOneProduct);
-			}
+		Double coinsForOneProduct = this.getLineTotal() / this.getQuantity();
+		if (!Utils.equals(coinsForOneProduct, lineOrder.getProductCoinsInCatalog())) {
+			b.append("Coins in catalog: " + lineOrder.getProductCoinsInCatalog() + ".\nCoins in order: "
+					+ coinsForOneProduct);
 		}
 		return b.toString();
 	}

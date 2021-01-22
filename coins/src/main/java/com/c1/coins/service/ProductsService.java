@@ -5,10 +5,10 @@ import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.c1.coins.model.ProductDetail;
-import com.c1.coins.model.ProductPrice;
+import com.c1.coins.model.ProductInCatalog;
 
 public interface ProductsService {
-	public List<ProductPrice> getProductPrices();
+	public List<ProductInCatalog> getProductPrices();
 
 	public List<Object> getAllProductsFromWooc();
 

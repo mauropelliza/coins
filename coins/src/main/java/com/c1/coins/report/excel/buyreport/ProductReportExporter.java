@@ -14,6 +14,10 @@ public class ProductReportExporter {
 			"Total Dolar Oficial", "Total Dolar MEP", "Total ARS");
 	private RequesterDetailLineExporter detailExporter = new RequesterDetailLineExporter();
 
+	public ProductReportExporter() {
+		super();
+	}
+
 	public void createExcelHeader(ExcelRow header) {
 		for (int i = 0; i < columnNames.size(); i++) {
 			header.createCell().setCellValue(columnNames.get(i));

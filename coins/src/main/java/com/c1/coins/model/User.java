@@ -60,6 +60,10 @@ public class User {
 	public Double getAccumulatedCoins() {
 		return Utils.toDouble(this.meta.get("initial_points"));
 	}
+	
+	public Double getCoinsBalance() {
+		return getAccumulatedCoins() - getSpentCoins();
+	}
 
 	public void setMetadata(Map<String, String> userMetadata) {
 		this.meta.clear();

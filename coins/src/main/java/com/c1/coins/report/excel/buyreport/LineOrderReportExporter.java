@@ -38,7 +38,6 @@ public class LineOrderReportExporter {
 		row.createCell().setCellValue(line.getQuantity());
 		row.createCell().setCellValue(line.getTotalCoins());
 		row.createCell().setCellValue(line.getProductCoinsInCatalog());
-		row.createCell().setCellValue(line.getProductUsdInCatalog());
 		row.createCell().setCellValue(line.getProductCurrencyInCatalog().toString());
 		row.createCell().setCellValue(String.join("\n", line.getErrors()));
 	}

@@ -26,7 +26,7 @@ import com.c1.coins.model.LineOrder;
 import com.c1.coins.model.Order;
 import com.c1.coins.model.Product;
 import com.c1.coins.model.ProductDetail;
-import com.c1.coins.model.ProductPrice;
+import com.c1.coins.model.ProductInCatalog;
 import com.c1.coins.model.User;
 import com.c1.coins.utils.Fields;
 import com.c1.coins.utils.StringMapExtractor;
@@ -47,9 +47,9 @@ public class DBRepository {
 	private String postBasicUrl;
 
 	private Map<Integer, User> users = Maps.newHashMap();
-	private Map<String, ProductPrice> productPrices;
+	private Map<String, ProductInCatalog> productPrices;
 
-	public Map<String, ProductPrice> getProductPrices() {
+	public Map<String, ProductInCatalog> getProductPrices() {
 		if (productPrices == null) {
 			try {
 				productPrices = loadProductPricesFromDB();
@@ -231,7 +231,7 @@ public class DBRepository {
 				line.setMetas(lineMetadata);
 			}
 
-			ProductPrice productPrice = this.getProductPrices().get(line.getProductName().toUpperCase());
+			ProductInCatalog productPrice = this.getProductPrices().get(line.getProductName().toUpperCase());
 			if (productPrice != null) {
 				if (!productPrice.getProductId().equals(line.getProductId())) {
 					String errorMessage = String.format("%s [%s] does not match with %s [%s]", line.getProductName(),
@@ -240,7 +240,6 @@ public class DBRepository {
 					line.addError(errorMessage);
 				} else {
 					line.setProductCoinsInCatalog(productPrice.getCoins());
-					line.setProductPriceInCatalog(productPrice.getPrice());
 					line.setProductCurrencyInCatalog(productPrice.getCurrency());
 				}
 			} 
@@ -276,26 +275,25 @@ public class DBRepository {
 		return products;
 	}
 
-	public Map<String, ProductPrice> loadProductPricesFromDB() throws IOException {
+	public Map<String, ProductInCatalog> loadProductPricesFromDB() throws IOException {
 
-		Map<String, ProductPrice> productPrices = Maps.newLinkedHashMap();
+		Map<String, ProductInCatalog> productPrices = Maps.newLinkedHashMap();
 		String wcQuery = "SELECT * FROM product_prices";
-		jdbc.query(wcQuery, new RowMapper<ProductPrice>() {
+		jdbc.query(wcQuery, new RowMapper<ProductInCatalog>() {
 			@Override
-			public ProductPrice mapRow(ResultSet rs, int rowNum) throws SQLException {
-				ProductPrice productPrice = new ProductPrice();
-				productPrice.setProductId(rs.getInt("product_id"));
-				productPrice.setTitle(rs.getString("product_name"));
-				productPrice.setPrice(rs.getDouble("price"));
-				productPrice.setCoins(rs.getDouble("coins"));
+			public ProductInCatalog mapRow(ResultSet rs, int rowNum) throws SQLException {
+				ProductInCatalog productInCatalog = new ProductInCatalog();
+				productInCatalog.setProductId(rs.getInt("product_id"));
+				productInCatalog.setTitle(rs.getString("product_name"));
+				productInCatalog.setCoins(rs.getDouble("coins"));
 				String currencyStr = rs.getString("currency");
 				String currencyType = rs.getString("currency_type");
 				if (!Utils.isBlank(currencyType)) {
 					currencyStr = currencyStr + "_" + currencyType;
 				}
-				productPrice.setCurrency(Currency.valueOf(currencyStr));
-				productPrices.put(productPrice.getTitle().toUpperCase(), productPrice);
-				return productPrice;
+				productInCatalog.setCurrency(Currency.valueOf(currencyStr));
+				productPrices.put(productInCatalog.getTitle().toUpperCase(), productInCatalog);
+				return productInCatalog;
 			}
 		});
 		return productPrices;

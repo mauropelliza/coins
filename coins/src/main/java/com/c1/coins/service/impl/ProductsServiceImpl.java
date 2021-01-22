@@ -22,7 +22,7 @@ import com.c1.coins.csv.ResultsToCsvSerializer;
 import com.c1.coins.model.Product;
 import com.c1.coins.model.ProductDetail;
 import com.c1.coins.model.ProductDetailWithAction;
-import com.c1.coins.model.ProductPrice;
+import com.c1.coins.model.ProductInCatalog;
 import com.c1.coins.repository.DBRepository;
 import com.c1.coins.service.ProductUpdaterService;
 import com.c1.coins.service.ProductsService;
@@ -88,8 +88,8 @@ public class ProductsServiceImpl implements ProductsService {
 	}
 
 	@Override
-	public List<ProductPrice> getProductPrices() {
-		Map<String, ProductPrice> productMap = dBRepository.getProductPrices();
+	public List<ProductInCatalog> getProductPrices() {
+		Map<String, ProductInCatalog> productMap = dBRepository.getProductPrices();
 		if (productMap.isEmpty())
 			return Lists.newArrayList();
 

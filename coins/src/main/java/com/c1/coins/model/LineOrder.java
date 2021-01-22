@@ -18,7 +18,6 @@ public class LineOrder {
 	private Map<String, String> meta = Maps.newLinkedHashMap();
 	private Order parentOrder;
 	private Double productCoinsInCatalog;
-	private Double productPriceInCatalog;
 	private Currency productCurrencyInCatalog = Currency.UNKNOWN;
 
 	private List<String> errors = Lists.newArrayList();
@@ -45,9 +44,6 @@ public class LineOrder {
 	}
 
 	public void validate() {
-		if (this.getProductUsdInCatalog() == null) {
-			this.addError("There is not dolar price for this product in the catalog");
-		}
 		if (this.getProductCoinsInCatalog() == null) {
 			this.addError("There is not coins value for this product in the catalog");
 		}
@@ -91,16 +87,9 @@ public class LineOrder {
 		this.productCoinsInCatalog = productCoinsInCatalog;
 	}
 
-	public void setProductPriceInCatalog(Double productPriceInCatalog) {
-		this.productPriceInCatalog = productPriceInCatalog;
-	}
 
 	public Double getProductCoinsInCatalog() {
 		return productCoinsInCatalog == null ? 0.0 : productCoinsInCatalog;
-	}
-
-	public Double getProductUsdInCatalog() {
-		return productPriceInCatalog == null ? 0.0 : productPriceInCatalog;
 	}
 
 	public Currency getProductCurrencyInCatalog() {

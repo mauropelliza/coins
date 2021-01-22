@@ -1,14 +1,13 @@
 package com.c1.coins.model;
 
-public class ProductPrice {
+public class ProductInCatalog {
 	private Integer productId;
 	private String title;
-	private Double price;
 	private Double coins;
 	private Currency currency;
 	private boolean visible;
 
-	public ProductPrice() {
+	public ProductInCatalog() {
 
 	}
 
@@ -26,14 +25,6 @@ public class ProductPrice {
 
 	public void setTitle(String title) {
 		this.title = title;
-	}
-
-	public Double getPrice() {
-		return price;
-	}
-
-	public void setPrice(Double price) {
-		this.price = price;
 	}
 
 	public Double getCoins() {

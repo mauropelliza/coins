@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.c1.coins.model.ProductDetail;
-import com.c1.coins.model.ProductPrice;
+import com.c1.coins.model.ProductInCatalog;
 import com.c1.coins.service.ProductsService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -31,7 +31,7 @@ public class ProductsController {
 	private ProductsService productsService;
 	
 	@GetMapping
-	public List<ProductPrice> getProductPrices() {
+	public List<ProductInCatalog> getProductPrices() {
 		return productsService.getProductPrices();
 	}
 	
