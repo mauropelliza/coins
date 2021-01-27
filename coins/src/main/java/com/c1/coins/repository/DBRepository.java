@@ -191,6 +191,32 @@ public class DBRepository {
 		return user;
 	}
 
+	public Integer getUserId(String userDisplayName) {
+		userDisplayName = userDisplayName.replaceAll("'", "\'");
+		String userId = "SELECT ID FROM wp_users WHERE display_name  = '" + userDisplayName + "'";
+		return jdbc.query(userId, new ResultSetExtractor<Integer>() {
+
+			@Override
+			public Integer extractData(ResultSet rs) throws SQLException, DataAccessException {
+				return rs.getInt("ID");
+			}
+
+		});
+	}
+
+	public void changeUserCoins(String userDisplayName, Integer coins) {
+		Integer idUser = getUserId(userDisplayName);
+		if (idUser == null) {
+			throw new IllegalArgumentException("User " + userDisplayName + " not found");
+		}
+
+		String updateCoins = String.format(
+				"update wp_usermeta set meta_values= '%s' where user_id=%s and meta_key='%s'", coins.toString(), idUser,
+				"initial_points");
+		
+		jdbc.update(updateCoins);
+	}
+
 	public List<Category> getAllCategories() {
 		String wcQuery = "select tm.term_id ID, tm.name NAME from wp_terms tm where tm.term_id in (SELECT distinct t.term_id "
 				+ "FROM `wp_term_taxonomy` t where t.taxonomy = 'product_cat')";
@@ -242,7 +268,7 @@ public class DBRepository {
 					line.setProductCoinsInCatalog(productPrice.getCoins());
 					line.setProductCurrencyInCatalog(productPrice.getCurrency());
 				}
-			} 
+			}
 			line.validate();
 		}
 
