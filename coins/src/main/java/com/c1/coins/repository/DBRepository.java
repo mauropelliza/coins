@@ -193,15 +193,8 @@ public class DBRepository {
 
 	public Integer getUserId(String userDisplayName) {
 		userDisplayName = userDisplayName.replaceAll("'", "\'");
-		String userId = "SELECT ID FROM wp_users WHERE display_name  = '" + userDisplayName + "'";
-		return jdbc.query(userId, new ResultSetExtractor<Integer>() {
-
-			@Override
-			public Integer extractData(ResultSet rs) throws SQLException, DataAccessException {
-				return rs.getInt("ID");
-			}
-
-		});
+		String getUserIdQuery = "SELECT ID FROM wp_users WHERE display_name  = '" + userDisplayName + "'";
+		return jdbc.queryForObject(getUserIdQuery, Integer.class);
 	}
 
 	public void changeUserCoins(String userDisplayName, Integer coins) {
@@ -211,7 +204,7 @@ public class DBRepository {
 		}
 
 		String updateCoins = String.format(
-				"update wp_usermeta set meta_values= '%s' where user_id=%s and meta_key='%s'", coins.toString(), idUser,
+				"update wp_usermeta set meta_value='%s' where user_id=%s and meta_key='%s'", coins.toString(), idUser,
 				"initial_points");
 		
 		jdbc.update(updateCoins);

@@ -30,10 +30,9 @@ public class UsersServiceImpl implements UsersService {
 	@Override
 	public List<String> insertCoins(Reader file) throws IOException {
 		LineReader r = new LineReader(new BufferedReader(file), true);
-		String line = r.readLine();
+		String line = r.readLine();//salteamos la linea de headers
 		List<String> errors = Lists.newArrayList();
-		while (line != null) {
-			line = r.readLine();
+		while ((line = r.readLine()) != null) {
 			String[] parts = line.split(",");
 			String user = parts[0];
 			Integer coins = Integer.valueOf(parts[1]);
